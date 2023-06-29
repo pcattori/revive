@@ -2,7 +2,8 @@
   "private": true,
   "name": "rev",
   "scripts": {
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "cli": "ts-node src/cli.ts"
   },
   "dependencies": {
     "commander": "^11.0.0"
