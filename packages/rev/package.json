@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "name": "rev",
+  "scripts": {
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "commander": "^11.0.0"
+  }
+}
