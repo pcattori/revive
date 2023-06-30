@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "dependencies": {
+    "@remix-run/node": "^1.18.0",
+    "@remix-run/react": "^1.18.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.14",
+    "@types/react-dom": "^18.2.6"
+  }
+}
