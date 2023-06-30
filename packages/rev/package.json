@@ -3,9 +3,10 @@
   "name": "rev",
   "type": "module",
   "bin": "./dist/cli.cjs",
+  "main": "./dist/plugin.cjs",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "build": "tsup src/cli.ts",
+    "build": "tsup src/cli.ts src/plugin.ts",
     "cli": "ts-node src/cli.ts"
   },
   "dependencies": {
