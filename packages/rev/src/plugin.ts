@@ -24,50 +24,6 @@ const createVirtualModule = (name: string, code: string) => {
   }
 }
 
-const getRemixPlugin = async (): Promise<Plugin> => {
-  const config = await getRemixConfig()
-  const manifest = await getAssetManifest(config)
-  const serverEntryJs = getServerEntry(config)
-
-  const serverEntryVirtualModule = createVirtualModule(
-    SERVER_ENTRY_ID,
-    serverEntryJs
-  )
-  const serverManifestVirtualModule = createVirtualModule(
-    SERVER_ASSETS_MANIFEST_ID,
-    `export default ${jsesc(manifest, { es6: true })};`
-  )
-  const browserManifestVirtualModule = createVirtualModule(
-    BROWSER_ASSETS_MANIFEST_ID,
-    `window.__remixManifest=${jsesc(manifest, { es6: true })};`
-  )
-
-  const virtualModules = [
-    serverEntryVirtualModule,
-    serverManifestVirtualModule,
-    browserManifestVirtualModule,
-  ]
-
-  return {
-    name: 'vite-plugin-remix',
-    enforce: 'pre',
-    resolveId(id) {
-      for (const virtualModule of virtualModules) {
-        if (id === virtualModule.virtualModuleId) {
-          return virtualModule.resolvedVirtualModuleId
-        }
-      }
-    },
-    load(id) {
-      for (const virtualModule of virtualModules) {
-        if (id === virtualModule.resolvedVirtualModuleId) {
-          return virtualModule.code
-        }
-      }
-    },
-  }
-}
-
 const toUnixPath = (p: string) =>
   // eslint-disable-next-line prefer-named-capture-group
   p.replace(/[\\/]+/g, '/').replace(/^([a-zA-Z]+:|\.\/)/, '')
