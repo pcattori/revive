@@ -1,8 +1,5 @@
 import * as path from 'node:path'
-import {
-  type RemixConfig,
-  readConfig as getRemixConfig,
-} from '@remix-run/dev/dist/config.js'
+import { type RemixConfig, readConfig } from '@remix-run/dev/dist/config.js'
 import { createRequestHandler } from '@remix-run/express'
 import { type ServerBuild } from '@remix-run/server-runtime'
 import { getRouteModuleExports } from '@remix-run/dev/dist/compiler/utils/routeExports.js'
@@ -97,7 +94,7 @@ const getServerEntry = (config: RemixConfig) => {
 }
 
 const getRemixRouteModuleExports = async (routeId: string) => {
-  const config = await getRemixConfig()
+  const config = await readConfig()
   return getRouteModuleExports(config, routeId)
 }
 
@@ -139,7 +136,7 @@ const getAssetManifest = async (config: RemixConfig) => {
 }
 
 export let revive: () => Promise<Plugin[]> = async () => {
-  const config = await getRemixConfig()
+  const config = await readConfig()
   const manifest = await getAssetManifest(config)
   const serverEntryJs = getServerEntry(config)
 
