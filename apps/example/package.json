@@ -1,5 +1,9 @@
 {
   "private": true,
+  "scripts": {
+    "dev": "rev dev",
+    "rev": "blah"
+  },
   "dependencies": {
     "@remix-run/node": "^1.18.0",
     "@remix-run/react": "^1.18.0",
@@ -8,6 +12,8 @@
   },
   "devDependencies": {
     "@types/react": "^18.2.14",
-    "@types/react-dom": "^18.2.6"
+    "@types/react-dom": "^18.2.6",
+    "rev": "workspace:*",
+    "vite": "^4.3.9"
   }
 }

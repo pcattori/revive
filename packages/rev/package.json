@@ -1,11 +1,21 @@
 {
   "private": true,
   "name": "rev",
+  "type": "module",
+  "bin": "./dist/cli.cjs",
   "scripts": {
-    "typecheck": "tsc",
+    "typecheck": "tsc --noEmit",
+    "build": "tsup src/cli.ts",
     "cli": "ts-node src/cli.ts"
   },
   "dependencies": {
     "commander": "^11.0.0"
+  },
+  "devDependencies": {
+    "tsup": "^7.1.0",
+    "vite": "^4.3.9"
+  },
+  "peerDependencies": {
+    "vite": "^4.3.9"
   }
 }

@@ -1,3 +1,5 @@
+import { spawn } from 'child_process'
+
 import { Command } from 'commander'
 
 let program = new Command()
@@ -12,7 +14,13 @@ program.command('serve').action(() => {
 })
 
 program.command('dev').action(() => {
-  console.log('dev!')
+  spawn('vite', ['dev'], {
+    shell: true,
+    stdio: 'inherit',
+    env: {
+      ...process.env,
+    },
+  })
 })
 
 program.parse()
