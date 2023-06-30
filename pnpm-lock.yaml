@@ -54,22 +54,31 @@ importers:
       '@remix-run/dev':
         specifier: ^1.18.0
         version: 1.18.0(@types/node@20.3.2)(ts-node@10.9.1)
-      '@remix-run/express':
+      '@remix-run/node':
         specifier: ^1.18.0
-        version: 1.18.0(express@4.18.2)
+        version: 1.18.0
       '@remix-run/server-runtime':
         specifier: ^1.18.0
         version: 1.18.0
       commander:
         specifier: ^11.0.0
         version: 11.0.0
+      esm-env:
+        specifier: ^1.0.0
+        version: 1.0.0
       jsesc:
         specifier: ^3.0.2
         version: 3.0.2
+      set-cookie-parser:
+        specifier: ^2.6.0
+        version: 2.6.0
     devDependencies:
       '@types/jsesc':
         specifier: 3.0.1
         version: 3.0.1
+      '@types/set-cookie-parser':
+        specifier: ^2.4.2
+        version: 2.4.2
       tsup:
         specifier: ^7.1.0
         version: 7.1.0(postcss@8.4.24)(ts-node@10.9.1)(typescript@5.1.6)
@@ -2095,16 +2104,6 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@remix-run/express@1.18.0(express@4.18.2):
-    resolution: {integrity: sha512-9OELr/a+P9ThcTnUHcU8uI4nhhCV9ol2tWqe4RGFeoSAMFee+F6NLMcT3qmM6KQBfn2lPPrYDhtuvIw8uhKayQ==}
-    engines: {node: '>=14.0.0'}
-    peerDependencies:
-      express: ^4.17.1
-    dependencies:
-      '@remix-run/node': 1.18.0
-      express: 4.18.2
-    dev: false
-
   /@remix-run/node@1.18.0:
     resolution: {integrity: sha512-RRsGS+19tpYj2EXid8PP+bV8Zj6P/4yT6pMkRCIlw1uY0uRUiA3PocnyGmgl6TsqsqaahC7KdDAxhVayt4tdZA==}
     engines: {node: '>=14.0.0'}
@@ -2340,6 +2339,12 @@ packages:
 
   /@types/scheduler@0.16.3:
     resolution: {integrity: sha512-5cJ8CB4yAx7BH1oMvdU0Jh9lrEXyPkar6F9G/ERswkCuvP4KQZfZkSjcMbAICCpQTN4OuZn8tz0HiKv9TGZgrQ==}
+    dev: true
+
+  /@types/set-cookie-parser@2.4.2:
+    resolution: {integrity: sha512-fBZgytwhYAUkj/jC/FAV4RQ5EerRup1YQsXQCh8rZfiHkc4UahC192oH0smGwsXol3cL3A5oETuAHeQHmhXM4w==}
+    dependencies:
+      '@types/node': 20.3.2
     dev: true
 
   /@types/unist@2.0.6:
@@ -3246,6 +3251,10 @@ packages:
       optionator: 0.8.3
     optionalDependencies:
       source-map: 0.6.1
+    dev: false
+
+  /esm-env@1.0.0:
+    resolution: {integrity: sha512-Cf6VksWPsTuW01vU9Mk/3vRue91Zevka5SjyNf3nEpokFRuqt/KjUQoGAwq9qMmhpLTHmXzSIrFRw8zxWzmFBA==}
     dev: false
 
   /esprima@4.0.1:

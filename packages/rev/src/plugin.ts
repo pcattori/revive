@@ -1,10 +1,12 @@
 import * as path from 'node:path'
 import { type RemixConfig, readConfig } from '@remix-run/dev/dist/config.js'
-import { createRequestHandler } from '@remix-run/express'
+import { createRequestHandler } from '@remix-run/node'
 import { type ServerBuild } from '@remix-run/server-runtime'
 import { getRouteModuleExports } from '@remix-run/dev/dist/compiler/utils/routeExports.js'
 import { type Plugin, normalizePath as viteNormalizePath } from 'vite'
 import jsesc from 'jsesc'
+
+import * as adapter from './adapter.js'
 
 const SERVER_ENTRY_ID = 'server-entry'
 const SERVER_ASSETS_MANIFEST_ID = 'server-assets-manifest'
@@ -25,27 +27,14 @@ const toUnixPath = (p: string) =>
   // eslint-disable-next-line prefer-named-capture-group
   p.replace(/[\\/]+/g, '/').replace(/^([a-zA-Z]+:|\.\/)/, '')
 
-const normalizePath = (p: string) => {
-  return viteNormalizePath(toUnixPath(p))
-}
+const normalizePath = (p: string) => viteNormalizePath(toUnixPath(p))
 
-const resolveFSPath = (filePath: string) => {
-  return `/@fs${normalizePath(filePath)}`
-}
-
-const getAppDirName = (config: RemixConfig) => {
-  return path.resolve(config.appDirectory)
-}
-
-const resolveAppRelativeFilePath = (file: string, config: RemixConfig) => {
-  const appDir = getAppDirName(config)
-  return path.resolve(process.cwd(), appDir, file)
-}
+const resolveFSPath = (filePath: string) => `/@fs${normalizePath(filePath)}`
 
 type Route = RemixConfig['routes'][string]
 const resolveRelativeRouteFilePath = (route: Route, config: RemixConfig) => {
   const file = route.file
-  const fullPath = resolveAppRelativeFilePath(file, config)
+  const fullPath = path.resolve(config.appDirectory, file)
 
   return normalizePath(fullPath)
 }
@@ -53,7 +42,7 @@ const resolveRelativeRouteFilePath = (route: Route, config: RemixConfig) => {
 const getServerEntry = (config: RemixConfig) => {
   return `
   import * as entryServer from ${JSON.stringify(
-    resolveFSPath(resolveAppRelativeFilePath(config.entryServerFile, config))
+    resolveFSPath(path.resolve(config.appDirectory, config.entryServerFile))
   )};
   ${Object.keys(config.routes)
     .map((key, index) => {
@@ -127,7 +116,7 @@ const getAssetManifest = async (config: RemixConfig) => {
     version: Math.random(),
     entry: {
       module: resolveFSPath(
-        resolveAppRelativeFilePath(config.entryClientFile, config)
+        path.resolve(config.appDirectory, config.entryClientFile)
       ),
       imports: [],
     },
@@ -169,15 +158,21 @@ export let revive: () => Promise<Plugin[]> = async () => {
               `virtual:${SERVER_ENTRY_ID}`
             )) as ServerBuild
 
-            const handler = createRequestHandler({
-              build,
-              mode: 'development',
+            const handler = createRequestHandler(build, 'development')
+
+            console.log({ type: 'before', url: req.url })
+
+            let request = await adapter.getRequest({
+              request: req,
+              base: 'http://127.0.0.1:5173',
+              bodySizeLimit: Number.MAX_SAFE_INTEGER,
             })
+            let response = await handler(request, {})
 
-            console.log({ handler })
+            adapter.setResponse(res, response)
 
-            res.setHeader('Content-Type', 'application/json')
-            res.end(JSON.stringify({ hello: 'world' }))
+            // res.setHeader('Content-Type', 'application/json')
+            // res.end(JSON.stringify({ hello: 'world' }))
           })
         }
       },

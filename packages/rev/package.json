@@ -2,23 +2,26 @@
   "private": true,
   "name": "rev",
   "type": "module",
-  "bin": "./dist/cli.cjs",
-  "main": "./dist/plugin.cjs",
+  "bin": "./dist/cli.js",
+  "main": "./dist/plugin.js",
   "scripts": {
     "typecheck": "tsc --noEmit",
     "dev": "pnpm build --watch",
-    "build": "tsup src/cli.ts src/plugin.ts",
+    "build": "tsup --format esm src/cli.ts src/plugin.ts",
     "cli": "ts-node src/cli.ts"
   },
   "dependencies": {
     "@remix-run/dev": "^1.18.0",
-    "@remix-run/express": "^1.18.0",
+    "@remix-run/node": "^1.18.0",
     "@remix-run/server-runtime": "^1.18.0",
     "commander": "^11.0.0",
-    "jsesc": "^3.0.2"
+    "esm-env": "^1.0.0",
+    "jsesc": "^3.0.2",
+    "set-cookie-parser": "^2.6.0"
   },
   "devDependencies": {
     "@types/jsesc": "3.0.1",
+    "@types/set-cookie-parser": "^2.4.2",
     "tsup": "^7.1.0",
     "vite": "^4.3.9"
   },
