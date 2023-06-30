@@ -1,12 +1,12 @@
 {
   "private": true,
   "scripts": {
-    "dev": "rev dev",
-    "rev": "blah"
+    "dev": "rev dev"
   },
   "dependencies": {
     "@remix-run/node": "^1.18.0",
     "@remix-run/react": "^1.18.0",
+    "isbot": "^3.6.12",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
