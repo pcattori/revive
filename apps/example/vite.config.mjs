@@ -1,4 +1,4 @@
-import { revive } from 'rev'
+import { revive } from 'revive'
 import { defineConfig } from 'vite'
 
 export default defineConfig({

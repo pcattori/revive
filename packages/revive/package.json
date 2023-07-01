@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "rev",
+  "name": "revive",
   "type": "module",
   "bin": "./dist/cli.js",
   "main": "./dist/plugin.js",
