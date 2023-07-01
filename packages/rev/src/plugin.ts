@@ -151,17 +151,26 @@ export let revive: () => Promise<Plugin[]> = async () => {
   return [
     {
       name: 'revive',
+      config(c) {
+        return {
+          appType: 'custom',
+        }
+      },
       configureServer(vite) {
         return () => {
           vite.middlewares.use(async (req, res, next) => {
+            // Node req/res -> Express req/res
+            // Express -> Fetch
+
+            // API: Node -> Fetch
+            // Implementation: Node -> Express -> Fetch
             let build = (await vite.ssrLoadModule(
               `virtual:${SERVER_ENTRY_ID}`
             )) as ServerBuild
 
             const handler = createRequestHandler(build, 'development')
 
-            console.log({ type: 'before', url: req.url })
-
+            // adapter
             let request = await adapter.getRequest({
               request: req,
               base: 'http://127.0.0.1:5173',
@@ -197,3 +206,44 @@ export let revive: () => Promise<Plugin[]> = async () => {
     },
   ]
 }
+
+/*
+
+1. solid start (library)
+-----------
+
+solidstart build -> call `vite.build`
+solidstart dev -> calls `vite dev`
+solidstart serve
+
+
+2. svelte (framework)
+------
+
+vite dev
+vite build
+vite preview
+
+configureServer -> vite dev
+configurePreviewServer -> vite preview
+
+3. bring your own server (BYOS)
+-----------------------
+
+import {createRequestHandler} from 'remix'
+
+
+let app = express()
+app.use((req, res, next) => {
+  let build = await vite.ssrLoadModule('virtual:entry-server')
+  let handler = createRequestHandler(build)
+  try {
+    return handler(req, res)
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.listen(3000)
+
+ */

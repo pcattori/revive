@@ -1,8 +1,8 @@
 import { IncomingMessage, ServerResponse } from 'http'
 
-import { installGlobals } from '@remix-run/node'
 import * as set_cookie_parser from 'set-cookie-parser'
 import { BROWSER, DEV } from 'esm-env'
+import { installGlobals } from '@remix-run/node'
 
 installGlobals()
 
