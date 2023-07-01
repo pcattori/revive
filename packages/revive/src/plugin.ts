@@ -7,22 +7,12 @@ import { type Plugin, normalizePath as viteNormalizePath } from 'vite'
 import jsesc from 'jsesc'
 
 import * as adapter from './node/adapter.js'
+import * as VirtualModule from './vmod.js'
 
-const SERVER_ENTRY_ID = 'server-entry'
-const SERVER_ASSETS_MANIFEST_ID = 'server-assets-manifest'
-const BROWSER_ASSETS_MANIFEST_ID = 'browser-assets-manifest'
-
-const createVirtualModule = (name: string, code: string) => {
-  const id = `virtual:${name}`
-  const resolvedId = `\0${id}`
-  return { id, resolvedId, code }
+const normalizePath = (p: string) => {
+  let unixPath = p.replace(/[\\/]+/g, '/').replace(/^([a-zA-Z]+:|\.\/)/, '')
+  return viteNormalizePath(unixPath)
 }
-
-const toUnixPath = (p: string) =>
-  // eslint-disable-next-line prefer-named-capture-group
-  p.replace(/[\\/]+/g, '/').replace(/^([a-zA-Z]+:|\.\/)/, '')
-
-const normalizePath = (p: string) => viteNormalizePath(toUnixPath(p))
 
 const resolveFSPath = (filePath: string) => `/@fs${normalizePath(filePath)}`
 
@@ -82,8 +72,6 @@ const getRemixRouteModuleExports = async (routeId: string) => {
   return getRouteModuleExports(config, routeId)
 }
 
-const getVirtualModuleUrl = (id: string) => `/@id/__x00__virtual:${id}`
-
 const getAssetManifest = async (config: RemixConfig) => {
   const routes: Record<string, any> = {}
 
@@ -107,7 +95,6 @@ const getAssetManifest = async (config: RemixConfig) => {
   }
 
   return {
-    url: getVirtualModuleUrl(BROWSER_ASSETS_MANIFEST_ID),
     version: Math.random(),
     entry: {
       module: resolveFSPath(
@@ -120,43 +107,38 @@ const getAssetManifest = async (config: RemixConfig) => {
 }
 
 export let revive: () => Promise<Plugin[]> = async () => {
-  const config = await readConfig()
-  const manifest = await getAssetManifest(config)
-  const serverEntryJs = getServerEntry(config)
+  let config = await readConfig()
+  let manifest = await getAssetManifest(config)
 
-  const serverEntryVirtualModule = createVirtualModule(
-    SERVER_ENTRY_ID,
-    serverEntryJs
-  )
-  const serverManifestVirtualModule = createVirtualModule(
-    SERVER_ASSETS_MANIFEST_ID,
+  let serverEntryJs = getServerEntry(config)
+  let serverEntryVMod = VirtualModule.create('server-entry', serverEntryJs)
+
+  let serverManifestVMod = VirtualModule.create(
+    'server-assets-manifest',
     `export default ${jsesc(manifest, { es6: true })};`
   )
-  const browserManifestVirtualModule = createVirtualModule(
-    BROWSER_ASSETS_MANIFEST_ID,
+  const browserManifestVMod = VirtualModule.create(
+    'browser-assets-manifest',
     `window.__remixManifest=${jsesc(manifest, { es6: true })};`
   )
+  // manifest.url = VMod.url(browserManifestVMod)
 
   const virtualModules = [
-    serverEntryVirtualModule,
-    serverManifestVirtualModule,
-    browserManifestVirtualModule,
+    serverEntryVMod,
+    serverManifestVMod,
+    browserManifestVMod,
   ]
 
   return [
     {
       name: 'revive',
-      config() {
-        return {
-          appType: 'custom',
-        }
-      },
+      config: () => ({ appType: 'custom' }),
       configureServer(vite) {
         return () => {
           vite.middlewares.use(async (req, res, next) => {
             try {
               let build = (await vite.ssrLoadModule(
-                `virtual:${SERVER_ENTRY_ID}`
+                serverEntryVMod.id
               )) as ServerBuild
 
               const handler = createRequestHandler(build, 'development')
@@ -177,16 +159,18 @@ export let revive: () => Promise<Plugin[]> = async () => {
       name: 'revive-virtual-modules',
       enforce: 'pre',
       resolveId(id) {
-        for (const virtualModule of virtualModules) {
-          if (id === virtualModule.id) {
-            return virtualModule.resolvedId
+        for (const vmod of virtualModules) {
+          console.log(`resolve: ${id} ${vmod}`)
+          if (id === vmod.id) {
+            return VirtualModule.resolve(vmod)
           }
         }
       },
       load(id) {
-        for (const virtualModule of virtualModules) {
-          if (id === virtualModule.resolvedId) {
-            return virtualModule.code
+        for (const vmod of virtualModules) {
+          console.log(`load: ${id} ${VirtualModule.resolve(vmod)}`)
+          if (id === VirtualModule.resolve(vmod)) {
+            return vmod.code
           }
         }
       },
