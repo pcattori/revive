@@ -6,7 +6,7 @@ import { getRouteModuleExports } from '@remix-run/dev/dist/compiler/utils/routeE
 import { type Plugin, normalizePath as viteNormalizePath } from 'vite'
 import jsesc from 'jsesc'
 
-import * as adapter from './adapter.js'
+import * as adapter from './node/adapter.js'
 
 const SERVER_ENTRY_ID = 'server-entry'
 const SERVER_ASSETS_MANIFEST_ID = 'server-assets-manifest'
@@ -159,11 +159,6 @@ export let revive: () => Promise<Plugin[]> = async () => {
       configureServer(vite) {
         return () => {
           vite.middlewares.use(async (req, res, next) => {
-            // Node req/res -> Express req/res
-            // Express -> Fetch
-
-            // API: Node -> Fetch
-            // Implementation: Node -> Express -> Fetch
             let build = (await vite.ssrLoadModule(
               `virtual:${SERVER_ENTRY_ID}`
             )) as ServerBuild
@@ -171,17 +166,10 @@ export let revive: () => Promise<Plugin[]> = async () => {
             const handler = createRequestHandler(build, 'development')
 
             // adapter
-            let request = await adapter.getRequest({
-              request: req,
-              base: 'http://127.0.0.1:5173',
-              bodySizeLimit: Number.MAX_SAFE_INTEGER,
-            })
+            let request = adapter.createRequest(req)
             let response = await handler(request, {})
 
-            adapter.setResponse(res, response)
-
-            // res.setHeader('Content-Type', 'application/json')
-            // res.end(JSON.stringify({ hello: 'world' }))
+            adapter.handleNodeResponse(response, res)
           })
         }
       },
@@ -206,44 +194,3 @@ export let revive: () => Promise<Plugin[]> = async () => {
     },
   ]
 }
-
-/*
-
-1. solid start (library)
------------
-
-solidstart build -> call `vite.build`
-solidstart dev -> calls `vite dev`
-solidstart serve
-
-
-2. svelte (framework)
-------
-
-vite dev
-vite build
-vite preview
-
-configureServer -> vite dev
-configurePreviewServer -> vite preview
-
-3. bring your own server (BYOS)
------------------------
-
-import {createRequestHandler} from 'remix'
-
-
-let app = express()
-app.use((req, res, next) => {
-  let build = await vite.ssrLoadModule('virtual:entry-server')
-  let handler = createRequestHandler(build)
-  try {
-    return handler(req, res)
-  } catch (error) {
-    next(error)
-  }
-})
-
-app.listen(3000)
-
- */
