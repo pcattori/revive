@@ -13,14 +13,9 @@ const SERVER_ASSETS_MANIFEST_ID = 'server-assets-manifest'
 const BROWSER_ASSETS_MANIFEST_ID = 'browser-assets-manifest'
 
 const createVirtualModule = (name: string, code: string) => {
-  const virtualModuleId = `virtual:${name}`
-  const resolvedVirtualModuleId = `\0${virtualModuleId}`
-
-  return {
-    virtualModuleId,
-    resolvedVirtualModuleId,
-    code,
-  }
+  const id = `virtual:${name}`
+  const resolvedId = `\0${id}`
+  return { id, resolvedId, code }
 }
 
 const toUnixPath = (p: string) =>
@@ -151,7 +146,7 @@ export let revive: () => Promise<Plugin[]> = async () => {
   return [
     {
       name: 'revive',
-      config(c) {
+      config() {
         return {
           appType: 'custom',
         }
@@ -159,17 +154,21 @@ export let revive: () => Promise<Plugin[]> = async () => {
       configureServer(vite) {
         return () => {
           vite.middlewares.use(async (req, res, next) => {
-            let build = (await vite.ssrLoadModule(
-              `virtual:${SERVER_ENTRY_ID}`
-            )) as ServerBuild
+            try {
+              let build = (await vite.ssrLoadModule(
+                `virtual:${SERVER_ENTRY_ID}`
+              )) as ServerBuild
 
-            const handler = createRequestHandler(build, 'development')
+              const handler = createRequestHandler(build, 'development')
 
-            // adapter
-            let request = adapter.createRequest(req)
-            let response = await handler(request, {})
+              // adapter
+              let request = adapter.createRequest(req)
+              let response = await handler(request, {})
 
-            adapter.handleNodeResponse(response, res)
+              adapter.handleNodeResponse(response, res)
+            } catch (error) {
+              next(error)
+            }
           })
         }
       },
@@ -179,14 +178,14 @@ export let revive: () => Promise<Plugin[]> = async () => {
       enforce: 'pre',
       resolveId(id) {
         for (const virtualModule of virtualModules) {
-          if (id === virtualModule.virtualModuleId) {
-            return virtualModule.resolvedVirtualModuleId
+          if (id === virtualModule.id) {
+            return virtualModule.resolvedId
           }
         }
       },
       load(id) {
         for (const virtualModule of virtualModules) {
-          if (id === virtualModule.resolvedVirtualModuleId) {
+          if (id === virtualModule.resolvedId) {
             return virtualModule.code
           }
         }
