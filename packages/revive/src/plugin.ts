@@ -8,6 +8,11 @@ import jsesc from 'jsesc'
 
 import * as NodeAdapter from './node/adapter.js'
 import * as VirtualModule from './vmod.js'
+import { Manifest } from '@remix-run/dev/dist/manifest.js'
+
+let serverEntry = VirtualModule.id('server-entry')
+let serverManifest = VirtualModule.id('server-manifest')
+let browserManifest = VirtualModule.id('browser-manifest')
 
 const normalizePath = (p: string) => {
   let unixPath = p.replace(/[\\/]+/g, '/').replace(/^([a-zA-Z]+:|\.\/)/, '')
@@ -37,9 +42,7 @@ const getServerEntry = (config: RemixConfig) => {
       )};`
     })
     .join('\n')}
-    export { default as assets } from ${JSON.stringify(
-      'virtual:server-assets-manifest'
-    )};
+    export { default as assets } from ${JSON.stringify(serverManifest)};
     export const assetsBuildDirectory = ${JSON.stringify(
       config.relativeAssetsBuildDirectory
     )};
@@ -67,7 +70,9 @@ const getServerEntry = (config: RemixConfig) => {
     };`
 }
 
-const getAssetManifest = async (config: RemixConfig) => {
+let vmods = [serverEntry, serverManifest, browserManifest]
+
+const getAssetManifest = async (config: RemixConfig): Promise<Manifest> => {
   const routes: Record<string, any> = {}
 
   for (const entry of Object.entries(config.routes)) {
@@ -90,7 +95,7 @@ const getAssetManifest = async (config: RemixConfig) => {
   }
 
   return {
-    version: Math.random(),
+    version: String(Math.random()),
     entry: {
       module: resolveFSPath(
         path.resolve(config.appDirectory, config.entryClientFile)
@@ -104,25 +109,7 @@ const getAssetManifest = async (config: RemixConfig) => {
 export let revive: () => Promise<Plugin[]> = async () => {
   let config = await readConfig()
   let manifest = await getAssetManifest(config)
-
-  let serverEntryJs = getServerEntry(config)
-  let serverEntryVMod = VirtualModule.create('server-entry', serverEntryJs)
-
-  let serverManifestVMod = VirtualModule.create(
-    'server-assets-manifest',
-    `export default ${jsesc(manifest, { es6: true })};`
-  )
-  const browserManifestVMod = VirtualModule.create(
-    'browser-assets-manifest',
-    `window.__remixManifest=${jsesc(manifest, { es6: true })};`
-  )
-  // manifest.url = VMod.url(browserManifestVMod)
-
-  const virtualModules = [
-    serverEntryVMod,
-    serverManifestVMod,
-    browserManifestVMod,
-  ]
+  manifest.url = VirtualModule.url(browserManifest)
 
   return [
     {
@@ -132,9 +119,7 @@ export let revive: () => Promise<Plugin[]> = async () => {
         return () => {
           vite.middlewares.use(async (req, res, next) => {
             try {
-              let build = (await vite.ssrLoadModule(
-                serverEntryVMod.id
-              )) as ServerBuild
+              let build = (await vite.ssrLoadModule(serverEntry)) as ServerBuild
               const handler = createRequestHandler(build, 'development')
 
               let request = NodeAdapter.createRequest(req)
@@ -151,19 +136,16 @@ export let revive: () => Promise<Plugin[]> = async () => {
       name: 'revive-virtual-modules',
       enforce: 'pre',
       resolveId(id) {
-        for (const vmod of virtualModules) {
-          console.log(`resolve: ${id} ${vmod}`)
-          if (id === vmod.id) {
-            return VirtualModule.resolve(vmod)
-          }
-        }
+        if (vmods.includes(id)) return VirtualModule.resolve(id)
       },
       load(id) {
-        for (const vmod of virtualModules) {
-          console.log(`load: ${id} ${VirtualModule.resolve(vmod)}`)
-          if (id === VirtualModule.resolve(vmod)) {
-            return vmod.code
-          }
+        switch (id) {
+          case VirtualModule.resolve(serverEntry):
+            return getServerEntry(config)
+          case VirtualModule.resolve(serverManifest):
+            return `export default ${jsesc(manifest, { es6: true })};`
+          case VirtualModule.resolve(browserManifest):
+            return `window.__remixManifest=${jsesc(manifest, { es6: true })};`
         }
       },
     },
