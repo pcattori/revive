@@ -6,7 +6,7 @@ import { getRouteModuleExports } from '@remix-run/dev/dist/compiler/utils/routeE
 import { type Plugin, normalizePath as viteNormalizePath } from 'vite'
 import jsesc from 'jsesc'
 
-import * as adapter from './node/adapter.js'
+import * as NodeAdapter from './node/adapter.js'
 import * as VirtualModule from './vmod.js'
 
 const normalizePath = (p: string) => {
@@ -135,14 +135,11 @@ export let revive: () => Promise<Plugin[]> = async () => {
               let build = (await vite.ssrLoadModule(
                 serverEntryVMod.id
               )) as ServerBuild
-
               const handler = createRequestHandler(build, 'development')
 
-              // adapter
-              let request = adapter.createRequest(req)
+              let request = NodeAdapter.createRequest(req)
               let response = await handler(request, {})
-
-              adapter.handleNodeResponse(response, res)
+              NodeAdapter.handleNodeResponse(response, res)
             } catch (error) {
               next(error)
             }
