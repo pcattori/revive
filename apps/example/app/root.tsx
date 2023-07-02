@@ -1,6 +1,5 @@
 import {
   Links,
-  LiveReload,
   Meta,
   Outlet,
   Scripts,
@@ -17,10 +16,11 @@ export default function App() {
         <Links />
       </head>
       <body>
+        <h1>outlet begin</h1>
         <Outlet />
+        <h1>outlet end</h1>
         <ScrollRestoration />
         <Scripts />
-        <LiveReload />
       </body>
     </html>
   )
