@@ -67,17 +67,12 @@ const getServerEntry = (config: RemixConfig) => {
     };`
 }
 
-const getRemixRouteModuleExports = async (routeId: string) => {
-  const config = await readConfig()
-  return getRouteModuleExports(config, routeId)
-}
-
 const getAssetManifest = async (config: RemixConfig) => {
   const routes: Record<string, any> = {}
 
   for (const entry of Object.entries(config.routes)) {
     const [key, route] = entry
-    const sourceExports = await getRemixRouteModuleExports(route.id)
+    const sourceExports = await getRouteModuleExports(config, route.id)
 
     routes[key] = {
       id: route.id,
