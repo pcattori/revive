@@ -1,10 +1,18 @@
+import { LinksFunction } from '@remix-run/node'
 import {
+  Link,
   Links,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
 } from '@remix-run/react'
+
+import globalStyles from './global.css?url'
+
+export const links: LinksFunction = () => {
+  return [{ rel: 'stylesheet', href: globalStyles }]
+}
 
 export default function App() {
   return (
@@ -17,6 +25,15 @@ export default function App() {
       </head>
       <body>
         <h1>outlet begin</h1>
+        <ul>
+          <li>
+            <Link to="/">Home</Link>
+          </li>
+          <li>
+            <Link to="/blah">Blah</Link>
+          </li>
+        </ul>
+
         <Outlet />
         <h1>outlet end</h1>
         <ScrollRestoration />

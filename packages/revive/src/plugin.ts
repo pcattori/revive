@@ -96,6 +96,7 @@ const getAssetManifest = async (config: RemixConfig): Promise<Manifest> => {
 
   return {
     version: String(Math.random()),
+    url: VirtualModule.url(browserManifest),
     entry: {
       module: resolveFSPath(
         path.resolve(config.appDirectory, config.entryClientFile)
@@ -106,11 +107,7 @@ const getAssetManifest = async (config: RemixConfig): Promise<Manifest> => {
   }
 }
 
-export let revive: () => Promise<Plugin[]> = async () => {
-  let config = await readConfig()
-  let manifest = await getAssetManifest(config)
-  manifest.url = VirtualModule.url(browserManifest)
-
+export let revive: () => Plugin[] = () => {
   return [
     {
       name: 'revive',
@@ -119,6 +116,17 @@ export let revive: () => Promise<Plugin[]> = async () => {
         return () => {
           vite.middlewares.use(async (req, res, next) => {
             try {
+              // Invalidate all virtual modules
+              vmods.forEach((vmod) => {
+                const mod = vite.moduleGraph.getModuleById(
+                  VirtualModule.resolve(vmod)
+                )
+
+                if (mod) {
+                  vite.moduleGraph.invalidateModule(mod)
+                }
+              })
+
               let build = (await vite.ssrLoadModule(serverEntry)) as ServerBuild
               const handler = createRequestHandler(build, 'development')
 
@@ -133,19 +141,36 @@ export let revive: () => Promise<Plugin[]> = async () => {
       },
     },
     {
+      name: 'revive-config',
+      enforce: 'pre',
+      config: () => ({
+        define: {
+          'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+        },
+      }),
+    },
+    {
       name: 'revive-virtual-modules',
       enforce: 'pre',
       resolveId(id) {
         if (vmods.includes(id)) return VirtualModule.resolve(id)
       },
-      load(id) {
+      async load(id) {
         switch (id) {
-          case VirtualModule.resolve(serverEntry):
+          case VirtualModule.resolve(serverEntry): {
+            const config = await readConfig()
             return getServerEntry(config)
-          case VirtualModule.resolve(serverManifest):
+          }
+          case VirtualModule.resolve(serverManifest): {
+            const config = await readConfig()
+            const manifest = await getAssetManifest(config)
             return `export default ${jsesc(manifest, { es6: true })};`
-          case VirtualModule.resolve(browserManifest):
+          }
+          case VirtualModule.resolve(browserManifest): {
+            const config = await readConfig()
+            const manifest = await getAssetManifest(config)
             return `window.__remixManifest=${jsesc(manifest, { es6: true })};`
+          }
         }
       },
     },
