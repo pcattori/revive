@@ -2,11 +2,13 @@ import { spawn } from 'child_process'
 
 import { Command } from 'commander'
 
+import { build } from './build.js'
+
 let program = new Command()
 program.name('rev')
 
-program.command('build').action(() => {
-  console.log('build!')
+program.command('build').action(async () => {
+  await build()
 })
 
 program.command('serve').action(() => {
