@@ -2,12 +2,17 @@
   "private": true,
   "scripts": {
     "dev": "revive dev",
-    "build": "revive build"
+    "build": "revive build",
+    "serve": "node server.js"
   },
   "dependencies": {
-    "@remix-run/node": "^1.18.0",
-    "@remix-run/react": "^1.18.0",
+    "@remix-run/express": "^1.18.1",
+    "@remix-run/node": "^1.18.1",
+    "@remix-run/react": "^1.18.1",
+    "compression": "^1.7.4",
+    "express": "^4.18.2",
     "isbot": "^3.6.12",
+    "morgan": "^1.10.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

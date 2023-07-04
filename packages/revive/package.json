@@ -11,9 +11,9 @@
     "cli": "ts-node src/cli.ts"
   },
   "dependencies": {
-    "@remix-run/dev": "^1.18.0",
-    "@remix-run/node": "^1.18.0",
-    "@remix-run/server-runtime": "^1.18.0",
+    "@remix-run/dev": "^1.18.1",
+    "@remix-run/node": "^1.18.1",
+    "@remix-run/server-runtime": "^1.18.1",
     "commander": "^11.0.0",
     "esm-env": "^1.0.0",
     "jsesc": "^3.0.2",

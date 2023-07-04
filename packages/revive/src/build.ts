@@ -47,6 +47,8 @@ export async function build() {
         preserveEntrySignatures: 'exports-only',
         input: 'virtual:server-entry',
         output: {
+          entryFileNames: 'index.js',
+          format: 'cjs',
           manualChunks: undefined,
         },
       },
