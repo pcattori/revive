@@ -1,5 +1,6 @@
 import { readConfig } from '@remix-run/dev/dist/config.js'
 import path from 'node:path'
+import fs from 'node:fs/promises'
 import * as vite from 'vite'
 
 export async function build() {
@@ -18,6 +19,33 @@ export async function build() {
             path.resolve(config.appDirectory, route.file)
           ),
         ],
+        output: {
+          manualChunks: undefined,
+        },
+      },
+    },
+  })
+
+  const manifest = JSON.parse(
+    await fs.readFile(
+      path.resolve(config.assetsBuildDirectory, 'manifest.json'),
+      'utf-8'
+    )
+  )
+  const ssrManifest = JSON.parse(
+    await fs.readFile(
+      path.resolve(config.assetsBuildDirectory, 'ssr-manifest.json'),
+      'utf-8'
+    )
+  )
+
+  await vite.build({
+    build: {
+      ssr: true,
+      outDir: path.dirname(config.serverBuildPath),
+      rollupOptions: {
+        preserveEntrySignatures: 'exports-only',
+        input: 'virtual:server-entry',
         output: {
           manualChunks: undefined,
         },
