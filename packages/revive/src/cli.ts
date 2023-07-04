@@ -7,9 +7,7 @@ import { build } from './build.js'
 let program = new Command()
 program.name('rev')
 
-program.command('build').action(async () => {
-  await build()
-})
+program.command('build').action(build)
 
 program.command('serve').action(() => {
   console.log('serve!')

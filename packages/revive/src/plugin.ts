@@ -1,18 +1,24 @@
 import * as path from 'node:path'
 import { type RemixConfig, readConfig } from '@remix-run/dev/dist/config.js'
-import { createRequestHandler } from '@remix-run/node'
+import { type Manifest } from '@remix-run/dev/dist/manifest.js'
 import { type ServerBuild } from '@remix-run/server-runtime'
+import { createRequestHandler } from '@remix-run/node'
 import { getRouteModuleExports } from '@remix-run/dev/dist/compiler/utils/routeExports.js'
-import { type Plugin, normalizePath as viteNormalizePath } from 'vite'
+import {
+  type Plugin,
+  type Manifest as ViteManifest,
+  normalizePath as viteNormalizePath,
+} from 'vite'
 import jsesc from 'jsesc'
 
 import * as NodeAdapter from './node/adapter.js'
 import * as VirtualModule from './vmod.js'
-import { Manifest } from '@remix-run/dev/dist/manifest.js'
+import { getHash } from './getHash.js'
+import { getViteManifest } from './getViteManifest.js'
 
 export let serverEntryId = VirtualModule.id('server-entry')
-let serverManifestId = VirtualModule.id('server-manifest')
-let browserManifestId = VirtualModule.id('browser-manifest')
+let browserManifestId = VirtualModule.id('browser-remix-manifest')
+let serverManifestId = VirtualModule.id('server-remix-manifest')
 
 const normalizePath = (p: string) => {
   let unixPath = p.replace(/[\\/]+/g, '/').replace(/^([a-zA-Z]+:|\.\/)/, '')
@@ -72,7 +78,9 @@ const getServerEntry = (config: RemixConfig) => {
 
 let vmods = [serverEntryId, serverManifestId, browserManifestId]
 
-const getAssetManifest = async (config: RemixConfig): Promise<Manifest> => {
+const getAssetManifestForDev = async (
+  config: RemixConfig
+): Promise<Manifest> => {
   const routes: Record<string, any> = {}
 
   for (const entry of Object.entries(config.routes)) {
@@ -107,12 +115,87 @@ const getAssetManifest = async (config: RemixConfig): Promise<Manifest> => {
   }
 }
 
+const resolveAssetPath = (
+  config: RemixConfig,
+  manifest: ViteManifest,
+  appRelativePath: string
+) => {
+  const appPath = path.relative(process.cwd(), config.appDirectory)
+  const manifestKey = normalizePath(path.join(appPath, appRelativePath))
+  return `${config.publicPath}${manifest[manifestKey]?.file}`
+}
+
+export const getAssetManifestForBuild = async (
+  config: RemixConfig,
+  viteManifest: ViteManifest
+): Promise<Manifest> => {
+  const entry: Manifest['entry'] = {
+    module: resolveAssetPath(config, viteManifest, config.entryClientFile),
+    imports: [],
+  }
+
+  const routes: Manifest['routes'] = {}
+  for (const entry of Object.entries(config.routes)) {
+    const [key, route] = entry
+    const sourceExports = await getRouteModuleExports(config, route.id)
+
+    routes[key] = {
+      id: route.id,
+      parentId: route.parentId,
+      path: route.path,
+      index: route.index,
+      caseSensitive: route.caseSensitive,
+      module: resolveAssetPath(config, viteManifest, route.file),
+      hasAction: sourceExports.includes('action'),
+      hasLoader: sourceExports.includes('loader'),
+      hasCatchBoundary: sourceExports.includes('CatchBoundary'),
+      hasErrorBoundary: sourceExports.includes('ErrorBoundary'),
+      imports: [],
+    }
+  }
+
+  let fingerprintedValues = {
+    entry,
+    routes,
+  }
+
+  let version = getHash(JSON.stringify(fingerprintedValues), 8)
+
+  let nonFingerprintedValues = {
+    version,
+  }
+
+  return {
+    ...fingerprintedValues,
+    ...nonFingerprintedValues,
+  }
+}
+
+const getAssetManifest = async ({
+  config,
+  mode,
+}: {
+  config: RemixConfig
+  mode: 'build' | 'dev'
+}): Promise<Manifest> => {
+  if (mode === 'build') {
+    const viteManifest = await getViteManifest(config)
+    return await getAssetManifestForBuild(config, viteManifest)
+  }
+
+  return await getAssetManifestForDev(config)
+}
+
 export let revive: () => Plugin[] = () => {
+  let mode: 'build' | 'dev' = 'build'
+
   return [
     {
       name: 'revive',
       config: () => ({ appType: 'custom' }),
       configureServer(vite) {
+        mode = 'dev'
+
         return () => {
           vite.middlewares.use(async (req, res, next) => {
             try {
@@ -164,13 +247,21 @@ export let revive: () => Plugin[] = () => {
             return getServerEntry(config)
           }
           case VirtualModule.resolve(serverManifestId): {
-            const config = await readConfig()
-            const manifest = await getAssetManifest(config)
+            const manifest = process.env.__REMIX_BUILD_MANIFEST_JSON__
+              ? JSON.parse(process.env.__REMIX_BUILD_MANIFEST_JSON__)
+              : await getAssetManifest({
+                  config: await readConfig(),
+                  mode,
+                })
             return `export default ${jsesc(manifest, { es6: true })};`
           }
           case VirtualModule.resolve(browserManifestId): {
-            const config = await readConfig()
-            const manifest = await getAssetManifest(config)
+            const manifest = process.env.__REMIX_BUILD_MANIFEST_JSON__
+              ? JSON.parse(process.env.__REMIX_BUILD_MANIFEST_JSON__)
+              : await getAssetManifest({
+                  config: await readConfig(),
+                  mode,
+                })
             return `window.__remixManifest=${jsesc(manifest, { es6: true })};`
           }
         }

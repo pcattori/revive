@@ -1,16 +1,16 @@
 import { readConfig } from '@remix-run/dev/dist/config.js'
 import path from 'node:path'
-import fs from 'node:fs/promises'
 import * as vite from 'vite'
 
-import { serverEntryId } from './plugin.js'
+import { serverEntryId, getAssetManifestForBuild } from './plugin.js'
+import { getViteManifest } from './getViteManifest.js'
+import { writeFileSafe } from './writeFileSafe.js'
 
 export async function build() {
   const config = await readConfig()
 
   await vite.build({
     build: {
-      ssrManifest: true,
       manifest: true,
       outDir: config.assetsBuildDirectory,
       rollupOptions: {
@@ -28,18 +28,18 @@ export async function build() {
     },
   })
 
-  const manifest = JSON.parse(
-    await fs.readFile(
-      path.resolve(config.assetsBuildDirectory, 'manifest.json'),
-      'utf-8'
-    )
+  const viteManifest = await getViteManifest(config)
+  const remixManifest = await getAssetManifestForBuild(config, viteManifest)
+
+  const filename = `manifest-${remixManifest.version}.js`
+  remixManifest.url = `${config.publicPath}${filename}`
+  const manifestJson = JSON.stringify(remixManifest)
+  await writeFileSafe(
+    path.join(config.assetsBuildDirectory, filename),
+    `window.__remixManifest=${manifestJson};`
   )
-  const ssrManifest = JSON.parse(
-    await fs.readFile(
-      path.resolve(config.assetsBuildDirectory, 'ssr-manifest.json'),
-      'utf-8'
-    )
-  )
+
+  process.env.__REMIX_BUILD_MANIFEST_JSON__ = manifestJson
 
   await vite.build({
     build: {
