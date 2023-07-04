@@ -3,11 +3,11 @@
   "name": "revive",
   "type": "module",
   "bin": "./dist/cli.js",
-  "main": "./dist/plugin.js",
+  "main": "./dist/index.js",
   "scripts": {
     "typecheck": "tsc --noEmit",
     "dev": "pnpm build --watch",
-    "build": "tsup --format esm src/cli.ts src/plugin.ts",
+    "build": "tsup --format esm src/cli.ts src/index.ts",
     "cli": "ts-node src/cli.ts"
   },
   "dependencies": {

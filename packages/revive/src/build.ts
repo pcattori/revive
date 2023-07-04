@@ -3,6 +3,8 @@ import path from 'node:path'
 import fs from 'node:fs/promises'
 import * as vite from 'vite'
 
+import { serverEntryId } from './plugin.js'
+
 export async function build() {
   const config = await readConfig()
 
@@ -45,9 +47,9 @@ export async function build() {
       outDir: path.dirname(config.serverBuildPath),
       rollupOptions: {
         preserveEntrySignatures: 'exports-only',
-        input: 'virtual:server-entry',
+        input: serverEntryId,
         output: {
-          entryFileNames: 'index.js',
+          entryFileNames: path.basename(config.serverBuildPath),
           format: 'cjs',
           manualChunks: undefined,
         },

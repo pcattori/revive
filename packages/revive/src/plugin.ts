@@ -10,9 +10,9 @@ import * as NodeAdapter from './node/adapter.js'
 import * as VirtualModule from './vmod.js'
 import { Manifest } from '@remix-run/dev/dist/manifest.js'
 
-let serverEntry = VirtualModule.id('server-entry')
-let serverManifest = VirtualModule.id('server-manifest')
-let browserManifest = VirtualModule.id('browser-manifest')
+export let serverEntryId = VirtualModule.id('server-entry')
+let serverManifestId = VirtualModule.id('server-manifest')
+let browserManifestId = VirtualModule.id('browser-manifest')
 
 const normalizePath = (p: string) => {
   let unixPath = p.replace(/[\\/]+/g, '/').replace(/^([a-zA-Z]+:|\.\/)/, '')
@@ -42,7 +42,7 @@ const getServerEntry = (config: RemixConfig) => {
       )};`
     })
     .join('\n')}
-    export { default as assets } from ${JSON.stringify(serverManifest)};
+    export { default as assets } from ${JSON.stringify(serverManifestId)};
     export const assetsBuildDirectory = ${JSON.stringify(
       config.relativeAssetsBuildDirectory
     )};
@@ -70,7 +70,7 @@ const getServerEntry = (config: RemixConfig) => {
     };`
 }
 
-let vmods = [serverEntry, serverManifest, browserManifest]
+let vmods = [serverEntryId, serverManifestId, browserManifestId]
 
 const getAssetManifest = async (config: RemixConfig): Promise<Manifest> => {
   const routes: Record<string, any> = {}
@@ -96,7 +96,7 @@ const getAssetManifest = async (config: RemixConfig): Promise<Manifest> => {
 
   return {
     version: String(Math.random()),
-    url: VirtualModule.url(browserManifest),
+    url: VirtualModule.url(browserManifestId),
     entry: {
       module: resolveFSPath(
         path.resolve(config.appDirectory, config.entryClientFile)
@@ -127,7 +127,9 @@ export let revive: () => Plugin[] = () => {
                 }
               })
 
-              let build = (await vite.ssrLoadModule(serverEntry)) as ServerBuild
+              let build = (await vite.ssrLoadModule(
+                serverEntryId
+              )) as ServerBuild
               const handler = createRequestHandler(build, 'development')
 
               let request = NodeAdapter.createRequest(req)
@@ -157,16 +159,16 @@ export let revive: () => Plugin[] = () => {
       },
       async load(id) {
         switch (id) {
-          case VirtualModule.resolve(serverEntry): {
+          case VirtualModule.resolve(serverEntryId): {
             const config = await readConfig()
             return getServerEntry(config)
           }
-          case VirtualModule.resolve(serverManifest): {
+          case VirtualModule.resolve(serverManifestId): {
             const config = await readConfig()
             const manifest = await getAssetManifest(config)
             return `export default ${jsesc(manifest, { es6: true })};`
           }
-          case VirtualModule.resolve(browserManifest): {
+          case VirtualModule.resolve(browserManifestId): {
             const config = await readConfig()
             const manifest = await getAssetManifest(config)
             return `window.__remixManifest=${jsesc(manifest, { es6: true })};`
