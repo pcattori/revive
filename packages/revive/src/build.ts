@@ -1,10 +1,16 @@
 import { readConfig } from '@remix-run/dev/dist/config.js'
 import path from 'node:path'
+import fs from 'node:fs/promises'
 import * as vite from 'vite'
 
-import { serverEntryId, getAssetManifestForBuild } from './plugin.js'
-import { getViteManifest } from './getViteManifest.js'
-import { writeFileSafe } from './writeFileSafe.js'
+import { serverEntryId, getBuildManifest } from './plugin.js'
+import { setBuildContext } from './buildContext.js'
+
+async function writeFileSafe(file: string, contents: string): Promise<string> {
+  await fs.mkdir(path.dirname(file), { recursive: true })
+  await fs.writeFile(file, contents)
+  return file
+}
 
 export async function build() {
   const config = await readConfig()
@@ -30,18 +36,22 @@ export async function build() {
     },
   })
 
-  const viteManifest = await getViteManifest(config)
-  const remixManifest = await getAssetManifestForBuild(config, viteManifest)
+  const viteManifest = JSON.parse(
+    await fs.readFile(
+      path.resolve(config.assetsBuildDirectory, 'manifest.json'),
+      'utf-8'
+    )
+  ) as vite.Manifest
+  const manifest = await getBuildManifest(config, viteManifest)
 
-  const filename = `manifest-${remixManifest.version}.js`
-  remixManifest.url = `${config.publicPath}${filename}`
-  const manifestJson = JSON.stringify(remixManifest)
+  const manifestFilename = `manifest-${manifest.version}.js`
+  manifest.url = `${config.publicPath}${manifestFilename}`
   await writeFileSafe(
-    path.join(config.assetsBuildDirectory, filename),
-    `window.__remixManifest=${manifestJson};`
+    path.join(config.assetsBuildDirectory, manifestFilename),
+    `window.__remixManifest=${JSON.stringify(manifest)};`
   )
 
-  process.env.__REMIX_BUILD_MANIFEST_JSON__ = manifestJson
+  setBuildContext({ manifest })
 
   await vite.build({
     base: config.publicPath,
