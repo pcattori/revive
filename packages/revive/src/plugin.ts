@@ -188,7 +188,9 @@ const getDevManifest = async (): Promise<Manifest> => {
 
 export let revive: () => Plugin[] = () => {
   let command: ResolvedViteConfig['command']
-  let buildManifest: Manifest | null = null
+  let ssrBuildContext:
+    | { isSsrBuild: false }
+    | { isSsrBuild: true; manifest: Manifest }
 
   return [
     {
@@ -197,9 +199,10 @@ export let revive: () => Plugin[] = () => {
       async configResolved(viteConfig) {
         command = viteConfig.command
 
-        if (viteConfig.ssr && command === 'build') {
-          buildManifest = await createBuildManifest()
-        }
+        ssrBuildContext =
+          viteConfig.ssr && command === 'build'
+            ? { isSsrBuild: true, manifest: await createBuildManifest() }
+            : { isSsrBuild: false }
       },
       configureServer(vite) {
         return () => {
@@ -253,12 +256,9 @@ export let revive: () => Plugin[] = () => {
             return getServerEntry(config)
           }
           case VirtualModule.resolve(serverManifestId): {
-            const manifest =
-              command === 'build' ? buildManifest : await getDevManifest()
-
-            if (!manifest) {
-              throw new Error('Manifest not found')
-            }
+            const manifest = ssrBuildContext.isSsrBuild
+              ? ssrBuildContext.manifest
+              : await getDevManifest()
 
             return `export default ${jsesc(manifest, { es6: true })};`
           }
