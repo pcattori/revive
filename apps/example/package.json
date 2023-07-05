@@ -3,12 +3,14 @@
   "scripts": {
     "dev": "revive dev",
     "build": "revive build",
-    "serve": "node server.js"
+    "serve": "remix-serve build",
+    "serve:custom": "node server.js"
   },
   "dependencies": {
     "@remix-run/express": "^1.18.1",
     "@remix-run/node": "^1.18.1",
     "@remix-run/react": "^1.18.1",
+    "@remix-run/serve": "^1.18.1",
     "compression": "^1.7.4",
     "express": "^4.18.2",
     "isbot": "^3.6.12",
