@@ -68,11 +68,8 @@ importers:
     dependencies:
       '@remix-run/dev':
         specifier: ^1.18.1
-        version: 1.18.1(@remix-run/serve@1.18.1)(@types/node@20.3.2)(ts-node@10.9.1)
+        version: 1.18.1(@types/node@20.3.2)(ts-node@10.9.1)
       '@remix-run/node':
-        specifier: ^1.18.1
-        version: 1.18.1
-      '@remix-run/serve':
         specifier: ^1.18.1
         version: 1.18.1
       '@remix-run/server-runtime':
@@ -2046,7 +2043,7 @@ packages:
       json-parse-even-better-errors: 2.3.1
     dev: false
 
-  /@remix-run/dev@1.18.1(@remix-run/serve@1.18.1)(@types/node@20.3.2)(ts-node@10.9.1):
+  /@remix-run/dev@1.18.1(@types/node@20.3.2)(ts-node@10.9.1):
     resolution: {integrity: sha512-uT+YRGiR17p51y284MvEZMpkFkIykJ0uTVP3hepW0fvtoD+dt09DFVk1AQkJhEKlIVECkyR9lrOtceP/2qML6w==}
     engines: {node: '>=14.0.0'}
     hasBin: true
@@ -2066,7 +2063,6 @@ packages:
       '@babel/traverse': 7.22.5
       '@babel/types': 7.22.5
       '@npmcli/package-json': 2.0.0
-      '@remix-run/serve': 1.18.1
       '@remix-run/server-runtime': 1.18.1
       '@vanilla-extract/integration': 6.2.1(@types/node@20.3.2)
       arg: 5.0.2
