@@ -1,4 +1,5 @@
 import * as path from 'node:path'
+import * as fs from 'node:fs/promises'
 import { BinaryLike, createHash } from 'node:crypto'
 import { RemixConfig, readConfig } from '@remix-run/dev/dist/config.js'
 import { Manifest } from '@remix-run/dev/dist/manifest.js'
@@ -15,7 +16,6 @@ import jsesc from 'jsesc'
 
 import * as NodeAdapter from './node/adapter.js'
 import * as VirtualModule from './vmod.js'
-import { getBuildContext } from './buildContext.js'
 
 export let serverEntryId = VirtualModule.id('server-entry')
 let serverManifestId = VirtualModule.id('server-manifest')
@@ -130,7 +130,7 @@ const resolveBuildAssetPath = (
   return `${config.publicPath}${manifest[manifestKey]?.file}`
 }
 
-export const getBuildManifest = async (
+const getBuildManifest = async (
   config: RemixConfig,
   viteManifest: ViteManifest
 ): Promise<Manifest> => {
@@ -176,15 +176,44 @@ export const getBuildManifest = async (
   }
 }
 
+const writeFileSafe = async (file: string, contents: string): Promise<void> => {
+  await fs.mkdir(path.dirname(file), { recursive: true })
+  await fs.writeFile(file, contents)
+}
+
+const writeBuildManifest = async (): Promise<Manifest> => {
+  const remixConfig = await readConfig()
+  const viteManifest = JSON.parse(
+    await fs.readFile(
+      path.resolve(remixConfig.assetsBuildDirectory, 'manifest.json'),
+      'utf-8'
+    )
+  ) as ViteManifest
+  const manifest = await getBuildManifest(remixConfig, viteManifest)
+
+  const manifestFilename = `manifest-${manifest.version}.js`
+  manifest.url = `${remixConfig.publicPath}${manifestFilename}`
+  await writeFileSafe(
+    path.join(remixConfig.assetsBuildDirectory, manifestFilename),
+    `window.__remixManifest=${JSON.stringify(manifest)};`
+  )
+  return manifest
+}
+
 export let revive: () => Plugin[] = () => {
-  let viteConfig: ResolvedViteConfig
+  let command: ResolvedViteConfig['command']
+  let buildManifest: Manifest
 
   return [
     {
       name: 'revive',
       config: () => ({ appType: 'custom' }),
-      configResolved(resolvedConfig) {
-        viteConfig = resolvedConfig
+      async configResolved(viteConfig) {
+        command = viteConfig.command
+
+        if (viteConfig.ssr && command === 'build') {
+          buildManifest = await writeBuildManifest()
+        }
       },
       configureServer(vite) {
         return () => {
@@ -238,22 +267,19 @@ export let revive: () => Plugin[] = () => {
             return getServerEntry(config)
           }
           case VirtualModule.resolve(serverManifestId): {
-            const remixManifest =
-              viteConfig.command === 'build'
-                ? getBuildContext().manifest
-                : await getDevManifest()
+            const manifest =
+              command === 'build' ? buildManifest : await getDevManifest()
 
-            return `export default ${jsesc(remixManifest, { es6: true })};`
+            return `export default ${jsesc(manifest, { es6: true })};`
           }
           case VirtualModule.resolve(browserManifestId): {
-            const remixManifest =
-              viteConfig.command === 'build'
-                ? getBuildContext().manifest
-                : await getDevManifest()
+            if (command === 'build') {
+              throw new Error('This module only exists in development')
+            }
 
-            return `window.__remixManifest=${jsesc(remixManifest, {
-              es6: true,
-            })};`
+            const manifest = await getDevManifest()
+
+            return `window.__remixManifest=${jsesc(manifest, { es6: true })};`
           }
         }
       },
