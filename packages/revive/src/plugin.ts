@@ -136,7 +136,7 @@ const createBuildManifest = async (): Promise<Manifest> => {
   const version = getHash(JSON.stringify(fingerprintedValues), 8)
   const manifestFilename = `manifest-${version}.js`
   const url = `${config.publicPath}${manifestFilename}`
-  let nonFingerprintedValues = { url, version }
+  const nonFingerprintedValues = { url, version }
 
   const manifest: Manifest = {
     ...fingerprintedValues,
