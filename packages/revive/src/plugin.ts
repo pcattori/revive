@@ -84,14 +84,21 @@ const getHash = (source: BinaryLike, maxLength?: number): string => {
   return typeof maxLength === 'number' ? hash.slice(0, maxLength) : hash
 }
 
-const resolveBuildAssetPath = (
+const resolveBuildAssetPaths = (
   config: RemixConfig,
   manifest: ViteManifest,
   appRelativePath: string
-) => {
+): Manifest['entry'] => {
   const appPath = path.relative(process.cwd(), config.appDirectory)
   const manifestKey = normalizePath(path.join(appPath, appRelativePath))
-  return `${config.publicPath}${manifest[manifestKey]?.file}`
+  const manifestEntry = manifest[manifestKey]
+  return {
+    module: `${config.publicPath}${manifestEntry.file}`,
+    imports:
+      manifestEntry.imports?.map(
+        (imported) => `${config.publicPath}${manifest[imported].file}`
+      ) ?? [],
+  }
 }
 
 const writeFileSafe = async (file: string, contents: string): Promise<void> => {
@@ -108,10 +115,11 @@ const createBuildManifest = async (): Promise<Manifest> => {
     )
   ) as ViteManifest
 
-  const entry: Manifest['entry'] = {
-    module: resolveBuildAssetPath(config, viteManifest, config.entryClientFile),
-    imports: [],
-  }
+  const entry: Manifest['entry'] = resolveBuildAssetPaths(
+    config,
+    viteManifest,
+    config.entryClientFile
+  )
 
   const routes: Manifest['routes'] = {}
   for (const [key, route] of Object.entries(config.routes)) {
@@ -123,12 +131,11 @@ const createBuildManifest = async (): Promise<Manifest> => {
       path: route.path,
       index: route.index,
       caseSensitive: route.caseSensitive,
-      module: resolveBuildAssetPath(config, viteManifest, route.file),
       hasAction: sourceExports.includes('action'),
       hasLoader: sourceExports.includes('loader'),
       hasCatchBoundary: sourceExports.includes('CatchBoundary'),
       hasErrorBoundary: sourceExports.includes('ErrorBoundary'),
-      imports: [],
+      ...resolveBuildAssetPaths(config, viteManifest, route.file),
     }
   }
 
