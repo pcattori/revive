@@ -79,12 +79,83 @@ const getServerEntry = (config: RemixConfig) => {
 
 let vmods = [serverEntryId, serverManifestId, browserManifestId]
 
+const getHash = (source: BinaryLike, maxLength?: number): string => {
+  const hash = createHash('sha256').update(source).digest('hex')
+  return typeof maxLength === 'number' ? hash.slice(0, maxLength) : hash
+}
+
+const resolveBuildAssetPath = (
+  config: RemixConfig,
+  manifest: ViteManifest,
+  appRelativePath: string
+) => {
+  const appPath = path.relative(process.cwd(), config.appDirectory)
+  const manifestKey = normalizePath(path.join(appPath, appRelativePath))
+  return `${config.publicPath}${manifest[manifestKey]?.file}`
+}
+
+const writeFileSafe = async (file: string, contents: string): Promise<void> => {
+  await fs.mkdir(path.dirname(file), { recursive: true })
+  await fs.writeFile(file, contents)
+}
+
+const createBuildManifest = async (): Promise<Manifest> => {
+  const config = await readConfig()
+  const viteManifest = JSON.parse(
+    await fs.readFile(
+      path.resolve(config.assetsBuildDirectory, 'manifest.json'),
+      'utf-8'
+    )
+  ) as ViteManifest
+
+  const entry: Manifest['entry'] = {
+    module: resolveBuildAssetPath(config, viteManifest, config.entryClientFile),
+    imports: [],
+  }
+
+  const routes: Manifest['routes'] = {}
+  for (const [key, route] of Object.entries(config.routes)) {
+    const sourceExports = await getRouteModuleExports(config, route.id)
+
+    routes[key] = {
+      id: route.id,
+      parentId: route.parentId,
+      path: route.path,
+      index: route.index,
+      caseSensitive: route.caseSensitive,
+      module: resolveBuildAssetPath(config, viteManifest, route.file),
+      hasAction: sourceExports.includes('action'),
+      hasLoader: sourceExports.includes('loader'),
+      hasCatchBoundary: sourceExports.includes('CatchBoundary'),
+      hasErrorBoundary: sourceExports.includes('ErrorBoundary'),
+      imports: [],
+    }
+  }
+
+  const fingerprintedValues = { entry, routes }
+  const version = getHash(JSON.stringify(fingerprintedValues), 8)
+  const manifestFilename = `manifest-${version}.js`
+  const url = `${config.publicPath}${manifestFilename}`
+  let nonFingerprintedValues = { url, version }
+
+  const manifest: Manifest = {
+    ...fingerprintedValues,
+    ...nonFingerprintedValues,
+  }
+
+  await writeFileSafe(
+    path.join(config.assetsBuildDirectory, manifestFilename),
+    `window.__remixManifest=${JSON.stringify(manifest)};`
+  )
+
+  return manifest
+}
+
 const getDevManifest = async (): Promise<Manifest> => {
   const config = await readConfig()
-  const routes: Record<string, any> = {}
+  const routes: Manifest['routes'] = {}
 
-  for (const entry of Object.entries(config.routes)) {
-    const [key, route] = entry
+  for (const [key, route] of Object.entries(config.routes)) {
     const sourceExports = await getRouteModuleExports(config, route.id)
 
     routes[key] = {
@@ -115,94 +186,9 @@ const getDevManifest = async (): Promise<Manifest> => {
   }
 }
 
-const getHash = (source: BinaryLike, maxLength?: number): string => {
-  const hash = createHash('sha256').update(source).digest('hex')
-  return typeof maxLength === 'number' ? hash.slice(0, maxLength) : hash
-}
-
-const resolveBuildAssetPath = (
-  config: RemixConfig,
-  manifest: ViteManifest,
-  appRelativePath: string
-) => {
-  const appPath = path.relative(process.cwd(), config.appDirectory)
-  const manifestKey = normalizePath(path.join(appPath, appRelativePath))
-  return `${config.publicPath}${manifest[manifestKey]?.file}`
-}
-
-const getBuildManifest = async (
-  config: RemixConfig,
-  viteManifest: ViteManifest
-): Promise<Manifest> => {
-  const entry: Manifest['entry'] = {
-    module: resolveBuildAssetPath(config, viteManifest, config.entryClientFile),
-    imports: [],
-  }
-
-  const routes: Manifest['routes'] = {}
-  for (const entry of Object.entries(config.routes)) {
-    const [key, route] = entry
-    const sourceExports = await getRouteModuleExports(config, route.id)
-
-    routes[key] = {
-      id: route.id,
-      parentId: route.parentId,
-      path: route.path,
-      index: route.index,
-      caseSensitive: route.caseSensitive,
-      module: resolveBuildAssetPath(config, viteManifest, route.file),
-      hasAction: sourceExports.includes('action'),
-      hasLoader: sourceExports.includes('loader'),
-      hasCatchBoundary: sourceExports.includes('CatchBoundary'),
-      hasErrorBoundary: sourceExports.includes('ErrorBoundary'),
-      imports: [],
-    }
-  }
-
-  let fingerprintedValues = {
-    entry,
-    routes,
-  }
-
-  let version = getHash(JSON.stringify(fingerprintedValues), 8)
-
-  let nonFingerprintedValues = {
-    version,
-  }
-
-  return {
-    ...fingerprintedValues,
-    ...nonFingerprintedValues,
-  }
-}
-
-const writeFileSafe = async (file: string, contents: string): Promise<void> => {
-  await fs.mkdir(path.dirname(file), { recursive: true })
-  await fs.writeFile(file, contents)
-}
-
-const writeBuildManifest = async (): Promise<Manifest> => {
-  const remixConfig = await readConfig()
-  const viteManifest = JSON.parse(
-    await fs.readFile(
-      path.resolve(remixConfig.assetsBuildDirectory, 'manifest.json'),
-      'utf-8'
-    )
-  ) as ViteManifest
-  const manifest = await getBuildManifest(remixConfig, viteManifest)
-
-  const manifestFilename = `manifest-${manifest.version}.js`
-  manifest.url = `${remixConfig.publicPath}${manifestFilename}`
-  await writeFileSafe(
-    path.join(remixConfig.assetsBuildDirectory, manifestFilename),
-    `window.__remixManifest=${JSON.stringify(manifest)};`
-  )
-  return manifest
-}
-
 export let revive: () => Plugin[] = () => {
   let command: ResolvedViteConfig['command']
-  let buildManifest: Manifest
+  let buildManifest: Manifest | null = null
 
   return [
     {
@@ -212,7 +198,7 @@ export let revive: () => Plugin[] = () => {
         command = viteConfig.command
 
         if (viteConfig.ssr && command === 'build') {
-          buildManifest = await writeBuildManifest()
+          buildManifest = await createBuildManifest()
         }
       },
       configureServer(vite) {
@@ -269,6 +255,10 @@ export let revive: () => Plugin[] = () => {
           case VirtualModule.resolve(serverManifestId): {
             const manifest =
               command === 'build' ? buildManifest : await getDevManifest()
+
+            if (!manifest) {
+              throw new Error('Manifest not found')
+            }
 
             return `export default ${jsesc(manifest, { es6: true })};`
           }
