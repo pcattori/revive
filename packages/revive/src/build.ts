@@ -10,9 +10,11 @@ export async function build() {
   const config = await readConfig()
 
   await vite.build({
+    base: config.publicPath,
     build: {
       manifest: true,
       outDir: config.assetsBuildDirectory,
+      assetsDir: '.',
       rollupOptions: {
         preserveEntrySignatures: 'exports-only',
         input: [
@@ -22,7 +24,7 @@ export async function build() {
           ),
         ],
         output: {
-          manualChunks: undefined,
+          assetFileNames: '_assets/[name]-[hash][extname]',
         },
       },
     },
@@ -42,16 +44,18 @@ export async function build() {
   process.env.__REMIX_BUILD_MANIFEST_JSON__ = manifestJson
 
   await vite.build({
+    base: config.publicPath,
     build: {
       ssr: true,
       outDir: path.dirname(config.serverBuildPath),
+      assetsDir: '.',
       rollupOptions: {
         preserveEntrySignatures: 'exports-only',
         input: serverEntryId,
         output: {
           entryFileNames: path.basename(config.serverBuildPath),
+          assetFileNames: '_assets/[name]-[hash][extname]',
           format: 'cjs',
-          manualChunks: undefined,
         },
       },
     },
