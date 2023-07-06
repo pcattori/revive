@@ -4,7 +4,6 @@ import { BinaryLike, createHash } from 'node:crypto'
 import { RemixConfig, readConfig } from '@remix-run/dev/dist/config.js'
 import { Manifest } from '@remix-run/dev/dist/manifest.js'
 import { ServerBuild } from '@remix-run/server-runtime'
-import { createRequestHandler } from '@remix-run/node'
 import { getRouteModuleExports } from '@remix-run/dev/dist/compiler/utils/routeExports.js'
 import {
   Plugin,
@@ -14,7 +13,7 @@ import {
 } from 'vite'
 import jsesc from 'jsesc'
 
-import * as NodeAdapter from './node/adapter.js'
+import { createRequestHandler } from './node/adapter.js'
 import * as VirtualModule from './vmod.js'
 
 export let serverEntryId = VirtualModule.id('server-entry')
@@ -229,11 +228,10 @@ export let revive: () => Plugin[] = () => {
               let build = (await vite.ssrLoadModule(
                 serverEntryId
               )) as ServerBuild
-              const handler = createRequestHandler(build, 'development')
-
-              let request = NodeAdapter.createRequest(req)
-              let response = await handler(request, {})
-              NodeAdapter.handleNodeResponse(response, res)
+              const handle = createRequestHandler(build, {
+                mode: 'development',
+              })
+              await handle(req, res)
             } catch (error) {
               next(error)
             }

@@ -7,7 +7,8 @@ import { splitCookiesString } from 'set-cookie-parser'
 import { Readable } from 'stream'
 import { File, FormData, Headers, Request as BaseNodeRequest } from 'undici'
 
-import { installGlobals } from '@remix-run/node'
+import { ServerBuild, installGlobals } from '@remix-run/node'
+import { createRequestHandler as createBaseRequestHandler } from '@remix-run/server-runtime'
 
 installGlobals()
 
@@ -149,7 +150,7 @@ class NodeRequest extends BaseNodeRequest {
   }
 }
 
-export function createRequest(req: IncomingMessage): Request {
+function createRequest(req: IncomingMessage): Request {
   let origin =
     req.headers.origin && 'null' !== req.headers.origin
       ? req.headers.origin
@@ -166,10 +167,7 @@ export function createRequest(req: IncomingMessage): Request {
   return new NodeRequest(url.href, init)
 }
 
-export async function handleNodeResponse(
-  webRes: Response,
-  res: ServerResponse
-) {
+async function handleNodeResponse(webRes: Response, res: ServerResponse) {
   res.statusCode = webRes.status
   res.statusMessage = webRes.statusText
 
@@ -188,4 +186,14 @@ export async function handleNodeResponse(
   }
 }
 
-export { splitCookiesString }
+export let createRequestHandler = (
+  build: ServerBuild,
+  { mode = 'production' }
+) => {
+  const handler = createBaseRequestHandler(build, mode)
+  return async (req: IncomingMessage, res: ServerResponse) => {
+    let request = createRequest(req)
+    let response = await handler(request, {})
+    handleNodeResponse(response, res)
+  }
+}
