@@ -16,6 +16,7 @@ import jsesc from 'jsesc'
 import { createRequestHandler } from './node/adapter.js'
 import { getStylesForUrl } from './styles.js'
 import * as VirtualModule from './vmod.js'
+import { filterExports } from './filter-exports.js'
 
 export let serverEntryId = VirtualModule.id('server-entry')
 let serverManifestId = VirtualModule.id('server-manifest')
@@ -285,6 +286,46 @@ export let revive: () => Plugin[] = () => {
 
             return `window.__remixManifest=${jsesc(manifest, { es6: true })};`
           }
+        }
+      },
+    },
+    {
+      name: 'revive-browser-filter',
+      enforce: 'pre',
+      async transform(code, id, options) {
+        if (options?.ssr) return
+
+        // ignore server files
+        if (/\.server(\.[jt]sx?)?$/.test(id)) return 'export default {}'
+
+        let config = await readConfig()
+
+        // get route from vite module id (TODO: make this more efficient)
+        if (!id.startsWith(config.appDirectory)) return
+        let routePath = path.relative(config.appDirectory, id)
+        let route = Object.values(config.routes).find(
+          (r) => r.file === routePath
+        )
+        if (!route) return
+
+        const routeExports = await getRouteModuleExports(config, route.id)
+
+        // ignore routes without component
+        if (!routeExports.includes('default')) return
+
+        let browserExports = routeExports.filter(
+          (x) => !['loader', 'actions'].includes(x)
+        )
+
+        // ignore routes without browser exports
+        if (browserExports.length === 0) return
+
+        const filtered = filterExports(id, code, browserExports)
+        const result = filtered.code
+
+        return {
+          code: result,
+          map: null,
         }
       },
     },
