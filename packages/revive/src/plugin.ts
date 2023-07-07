@@ -14,6 +14,7 @@ import {
 import jsesc from 'jsesc'
 
 import { createRequestHandler } from './node/adapter.js'
+import { getStylesForUrl } from './styles.js'
 import * as VirtualModule from './vmod.js'
 
 export let serverEntryId = VirtualModule.id('server-entry')
@@ -225,9 +226,17 @@ export let revive: () => Plugin[] = () => {
                 }
               })
 
-              let build = (await vite.ssrLoadModule(
-                serverEntryId
-              )) as ServerBuild
+              const [config, build] = await Promise.all([
+                readConfig(),
+                vite.ssrLoadModule(serverEntryId) as Promise<ServerBuild>,
+              ])
+
+              const styles = await getStylesForUrl(vite, config, build, req.url)
+
+              if (Object.keys(styles).length) {
+                console.log('Collected styles:', styles)
+              }
+
               const handle = createRequestHandler(build, {
                 mode: 'development',
               })

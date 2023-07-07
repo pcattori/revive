@@ -72,6 +72,9 @@ importers:
       '@remix-run/node':
         specifier: ^1.18.1
         version: 1.18.1
+      '@remix-run/router':
+        specifier: ^1.7.1
+        version: 1.7.1
       '@remix-run/server-runtime':
         specifier: ^1.18.1
         version: 1.18.1

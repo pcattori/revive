@@ -13,6 +13,7 @@
   "dependencies": {
     "@remix-run/dev": "^1.18.1",
     "@remix-run/node": "^1.18.1",
+    "@remix-run/router": "^1.7.1",
     "@remix-run/server-runtime": "^1.18.1",
     "commander": "^11.0.0",
     "esm-env": "^1.0.0",
