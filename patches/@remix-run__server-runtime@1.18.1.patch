@@ -1,0 +1,49 @@
+diff --git a/dist/server.js b/dist/server.js
+index 07ac9741921261dea644ca3286754b33ac787890..9a0b575487941dd8a134719c9def859827bd14e6 100644
+--- a/dist/server.js
++++ b/dist/server.js
+@@ -35,7 +35,7 @@ const createRequestHandler = (build, mode$1) => {
+       console.error(error);
+     }
+   });
+-  return async function requestHandler(request, loadContext = {}) {
++  return async function requestHandler(request, loadContext = {}, criticalStyles) {
+     let url = new URL(request.url);
+     let matches = routeMatching.matchServerRoutes(routes$1, url.pathname);
+     let handleError = error => errorHandler(error, {
+@@ -58,7 +58,7 @@ const createRequestHandler = (build, mode$1) => {
+     } else if (matches && matches[matches.length - 1].route.module.default == null) {
+       response = await handleResourceRequestRR(serverMode, staticHandler, matches.slice(-1)[0].route.id, request, loadContext, handleError);
+     } else {
+-      response = await handleDocumentRequestRR(serverMode, build, staticHandler, request, loadContext, handleError);
++      response = await handleDocumentRequestRR(serverMode, build, staticHandler, request, loadContext, handleError, criticalStyles);
+     }
+     if (request.method === "HEAD") {
+       return new Response(null, {
+@@ -157,7 +157,7 @@ function differentiateCatchVersusErrorBoundaries(build, context) {
+   }
+   context.errors = errors;
+ }
+-async function handleDocumentRequestRR(serverMode, build, staticHandler, request, loadContext, handleError) {
++async function handleDocumentRequestRR(serverMode, build, staticHandler, request, loadContext, handleError, criticalStyles) {
+   let context;
+   try {
+     context = await staticHandler.query(request, {
+@@ -192,6 +192,7 @@ async function handleDocumentRequestRR(serverMode, build, staticHandler, request
+     manifest: build.assets,
+     routeModules: entry.createEntryRouteModules(build.routes),
+     staticHandlerContext: context,
++    criticalStyles,
+     serverHandoffString: serverHandoff.createServerHandoffString({
+       url: context.location.pathname,
+       state: {
+@@ -200,7 +201,8 @@ async function handleDocumentRequestRR(serverMode, build, staticHandler, request
+         errors: errors.serializeErrors(context.errors, serverMode)
+       },
+       future: build.future,
+-      dev: build.dev
++      dev: build.dev,
++      criticalStyles,
+     }),
+     future: build.future
+   };

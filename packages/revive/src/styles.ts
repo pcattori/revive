@@ -18,7 +18,7 @@ const module_style_pattern =
 const getStylesForFiles = async (
   viteServer: ViteDevServer,
   files: string[]
-) => {
+): Promise<string | undefined> => {
   const styles: Record<string, string> = {}
   const deps = new Set<ModuleNode>()
 
@@ -65,7 +65,7 @@ const getStylesForFiles = async (
     }
   }
 
-  return styles
+  return Object.values(styles).join('\n') || undefined
 }
 
 const findDeps = async (
@@ -154,9 +154,9 @@ export const getStylesForUrl = async (
   config: RemixConfig,
   build: ServerBuild,
   url: string | undefined
-): Promise<Record<string, string>> => {
+): Promise<string | undefined> => {
   if (url === undefined || url.includes('?_data=')) {
-    return {}
+    return undefined
   }
 
   const documentRouteFiles = routeFilesForUrl(config, build, url)

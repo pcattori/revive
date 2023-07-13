@@ -1,12 +1,8 @@
-import { LinksFunction, json } from '@remix-run/node'
+import { json } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 
-import styles from './styles.css?url'
+import './styles.css'
 import doggo from './doggo.jpg'
-
-export const links: LinksFunction = () => {
-  return [{ rel: 'stylesheet', href: styles }]
-}
 
 export const loader = () => {
   return json({ message: 'hello from loader!' })

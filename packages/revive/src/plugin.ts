@@ -232,14 +232,16 @@ export let revive: () => Plugin[] = () => {
                 vite.ssrLoadModule(serverEntryId) as Promise<ServerBuild>,
               ])
 
-              const styles = await getStylesForUrl(vite, config, build, req.url)
-
-              if (Object.keys(styles).length) {
-                console.log('Collected styles:', styles)
-              }
+              const criticalStyles = await getStylesForUrl(
+                vite,
+                config,
+                build,
+                req.url
+              )
 
               const handle = createRequestHandler(build, {
                 mode: 'development',
+                criticalStyles,
               })
               await handle(req, res)
             } catch (error) {

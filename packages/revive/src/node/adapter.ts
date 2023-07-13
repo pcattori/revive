@@ -188,12 +188,18 @@ async function handleNodeResponse(webRes: Response, res: ServerResponse) {
 
 export let createRequestHandler = (
   build: ServerBuild,
-  { mode = 'production' }
+  {
+    mode = 'production',
+    criticalStyles,
+  }: {
+    mode?: string
+    criticalStyles?: string
+  }
 ) => {
   const handler = createBaseRequestHandler(build, mode)
   return async (req: IncomingMessage, res: ServerResponse) => {
     let request = createRequest(req)
-    let response = await handler(request, {})
+    let response = await handler(request, {}, criticalStyles)
     handleNodeResponse(response, res)
   }
 }
