@@ -94,6 +94,96 @@ index 366a7e5c9041b63b747ff36674d2947502c424b0..2f9d85614c4ccb36888308d358433c82
  }
  
  /**
+diff --git a/dist/esm/links.js b/dist/esm/links.js
+index 3ca8cf38916d62cb03b0096ba3341e3ce513bfa4..bb9cc45b571ededad8821dc8f2dcf876d6227acf 100644
+--- a/dist/esm/links.js
++++ b/dist/esm/links.js
+@@ -26,15 +26,21 @@ function getLinksForMatches(matches, routeModules, manifest) {
+   let descriptors = matches.map(match => {
+     var _module$links;
+     let module = routeModules[match.route.id];
+-    return ((_module$links = module.links) === null || _module$links === void 0 ? void 0 : _module$links.call(module)) || [];
+-  }).flat(1);
++    let route = manifest.routes[match.route.id];
++    return [
++      route.css ? route.css.map(href => ({ rel: "stylesheet", href })) : [],
++      ((_module$links = module.links) === null || _module$links === void 0 ? void 0 : _module$links.call(module)) || [],
++    ];
++  }).flat(2);
+   let preloads = getCurrentPageModulePreloadHrefs(matches, manifest);
+   return dedupe(descriptors, preloads);
+ }
+-async function prefetchStyleLinks(routeModule) {
+-  if (!routeModule.links) return;
+-  let descriptors = routeModule.links();
+-  if (!descriptors) return;
++async function prefetchStyleLinks(route, routeModule) {
++  let descriptors = [
++    route.css ? route.css.map(href => ({ rel: "stylesheet", href })) : [],
++    routeModule.links ? routeModule.links() : []
++  ].flat(1);
++  if (descriptors.length === 0) return;
+   let styleLinks = [];
+   for (let descriptor of descriptors) {
+     if (!isPageLinkDescriptor(descriptor) && descriptor.rel === "stylesheet") {
+diff --git a/dist/esm/routes.js b/dist/esm/routes.js
+index 366a0fe9c17dd23843ac5d0f4415c71762135931..72da96967487e24d77d7d48bf229c0b71d7e8b24 100644
+--- a/dist/esm/routes.js
++++ b/dist/esm/routes.js
+@@ -107,7 +107,7 @@ function createShouldRevalidate(route, routeModules, needsRevalidation) {
+ }
+ async function loadRouteModuleWithBlockingLinks(route, routeModules) {
+   let routeModule = await loadRouteModule(route, routeModules);
+-  await prefetchStyleLinks(routeModule);
++  await prefetchStyleLinks(route, routeModule);
+   return routeModule;
+ }
+ function createDataFunction(route, routeModules, isAction) {
+diff --git a/dist/links.js b/dist/links.js
+index d69280567916589d258e763f308ad000d59550f5..67619a9be07aa734593855b95c0f79f53b00a1db 100644
+--- a/dist/links.js
++++ b/dist/links.js
+@@ -30,15 +30,21 @@ function getLinksForMatches(matches, routeModules, manifest) {
+   let descriptors = matches.map(match => {
+     var _module$links;
+     let module = routeModules[match.route.id];
+-    return ((_module$links = module.links) === null || _module$links === void 0 ? void 0 : _module$links.call(module)) || [];
+-  }).flat(1);
++    let route = manifest.routes[match.route.id];
++    return [
++      route.css ? route.css.map(href => ({ rel: "stylesheet", href })) : [],
++      ((_module$links = module.links) === null || _module$links === void 0 ? void 0 : _module$links.call(module)) || []
++    ];
++  }).flat(2);
+   let preloads = getCurrentPageModulePreloadHrefs(matches, manifest);
+   return dedupe(descriptors, preloads);
+ }
+-async function prefetchStyleLinks(routeModule) {
+-  if (!routeModule.links) return;
+-  let descriptors = routeModule.links();
+-  if (!descriptors) return;
++async function prefetchStyleLinks(route, routeModule) {
++  let descriptors = [
++    route.css ? route.css.map(href => ({ rel: "stylesheet", href })) : [],
++    routeModule.links ? routeModule.links() : []
++  ].flat(1);
++  if (descriptors.length === 0) return;
+   let styleLinks = [];
+   for (let descriptor of descriptors) {
+     if (!isPageLinkDescriptor(descriptor) && descriptor.rel === "stylesheet") {
+diff --git a/dist/routes.js b/dist/routes.js
+index 938cbf4ff96550d9e937fc75870e52a431f7de5a..fc0636af973b1d9f3124b4d92627b5c56b2f9aa3 100644
+--- a/dist/routes.js
++++ b/dist/routes.js
+@@ -128,7 +128,7 @@ function createShouldRevalidate(route, routeModules, needsRevalidation) {
+ }
+ async function loadRouteModuleWithBlockingLinks(route, routeModules$1) {
+   let routeModule = await routeModules.loadRouteModule(route, routeModules$1);
+-  await links.prefetchStyleLinks(routeModule);
++  await links.prefetchStyleLinks(route, routeModule);
+   return routeModule;
+ }
+ function createDataFunction(route, routeModules, isAction) {
 diff --git a/dist/server.js b/dist/server.js
 index 44e4067aa4b0af3c705a0712d3c7d030cd405be9..1741aeca1ac29df532d1fa914b9cf5dc2eb3af1d 100644
 --- a/dist/server.js

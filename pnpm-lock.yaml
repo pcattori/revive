@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   '@remix-run/react@1.18.1':
-    hash: wbumhudq2vnmuoh6amezthxfe4
+    hash: 5rgojohy7tw3h6hpgyb2w2jtle
     path: patches/@remix-run__react@1.18.1.patch
   '@remix-run/server-runtime@1.18.1':
     hash: pnkturmelslk4no7o4n5kymwme
@@ -36,7 +36,7 @@ importers:
         version: 1.18.1
       '@remix-run/react':
         specifier: ^1.18.1
-        version: 1.18.1(patch_hash=wbumhudq2vnmuoh6amezthxfe4)(react-dom@18.2.0)(react@18.2.0)
+        version: 1.18.1(patch_hash=5rgojohy7tw3h6hpgyb2w2jtle)(react-dom@18.2.0)(react@18.2.0)
       '@remix-run/serve':
         specifier: ^1.18.1
         version: 1.18.1
@@ -2190,7 +2190,7 @@ packages:
       stream-slice: 0.1.2
     dev: false
 
-  /@remix-run/react@1.18.1(patch_hash=wbumhudq2vnmuoh6amezthxfe4)(react-dom@18.2.0)(react@18.2.0):
+  /@remix-run/react@1.18.1(patch_hash=5rgojohy7tw3h6hpgyb2w2jtle)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-vs94AxXXaXU0K3W4zQ05hR9R1+Ief9oq5JZOZKdeFoM2dgdSb6u/ovRNyQK1ukzjIBO9vARpNC0HMeqN/eGhtw==}
     engines: {node: '>=14.0.0'}
     peerDependencies:

@@ -89,16 +89,20 @@ const resolveBuildAssetPaths = (
   config: RemixConfig,
   manifest: ViteManifest,
   appRelativePath: string
-): Manifest['entry'] => {
+): Manifest['entry'] & { css: string[] } => {
   const appPath = path.relative(process.cwd(), config.appDirectory)
   const manifestKey = normalizePath(path.join(appPath, appRelativePath))
   const manifestEntry = manifest[manifestKey]
   return {
     module: `${config.publicPath}${manifestEntry.file}`,
     imports:
-      manifestEntry.imports?.map(
-        (imported) => `${config.publicPath}${manifest[imported].file}`
-      ) ?? [],
+      manifestEntry.imports?.map((imported) => {
+        return `${config.publicPath}${manifest[imported].file}`
+      }) ?? [],
+    css:
+      manifestEntry.css?.map((href) => {
+        return `${config.publicPath}${href}`
+      }) ?? [],
   }
 }
 
