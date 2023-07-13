@@ -208,7 +208,7 @@ export let revive: () => Plugin[] = () => {
         command = viteConfig.command
 
         ssrBuildContext =
-          viteConfig.ssr && command === 'build'
+          viteConfig.build.ssr && command === 'build'
             ? { isSsrBuild: true, manifest: await createBuildManifest() }
             : { isSsrBuild: false }
       },
