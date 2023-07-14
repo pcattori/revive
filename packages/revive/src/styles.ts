@@ -65,7 +65,18 @@ const getStylesForFiles = async (
     }
   }
 
-  return Object.values(styles).join('\n') || undefined
+  return (
+    Object.entries(styles)
+      .map(([fileName, css], i) => [
+        `\n/* ${fileName
+          // Escape comment syntax in file paths
+          .replace(/\/\*/g, '/\\*')
+          .replace(/\*\//g, '*\\/')} */`,
+        css,
+      ])
+      .flat()
+      .join('\n') || undefined
+  )
 }
 
 const findDeps = async (
