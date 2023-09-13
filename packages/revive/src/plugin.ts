@@ -138,7 +138,6 @@ const createBuildManifest = async (): Promise<Manifest> => {
       caseSensitive: route.caseSensitive,
       hasAction: sourceExports.includes('action'),
       hasLoader: sourceExports.includes('loader'),
-      hasCatchBoundary: sourceExports.includes('CatchBoundary'),
       hasErrorBoundary: sourceExports.includes('ErrorBoundary'),
       ...resolveBuildAssetPaths(config, viteManifest, route.file),
     }
@@ -179,7 +178,6 @@ const getDevManifest = async (): Promise<Manifest> => {
       module: resolveFSPath(resolveRelativeRouteFilePath(route, config)),
       hasAction: sourceExports.includes('action'),
       hasLoader: sourceExports.includes('loader'),
-      hasCatchBoundary: sourceExports.includes('CatchBoundary'),
       hasErrorBoundary: sourceExports.includes('ErrorBoundary'),
       imports: [],
     }

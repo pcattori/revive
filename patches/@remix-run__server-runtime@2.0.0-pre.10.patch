@@ -1,9 +1,9 @@
 diff --git a/dist/server.js b/dist/server.js
-index 07ac9741921261dea644ca3286754b33ac787890..9a0b575487941dd8a134719c9def859827bd14e6 100644
+index 5287fcba3e5f6c0252f81e6fc03e08f72e58ab80..a246d9ebe01b94ac95ec14fa3703d107caf01514 100644
 --- a/dist/server.js
 +++ b/dist/server.js
-@@ -35,7 +35,7 @@ const createRequestHandler = (build, mode$1) => {
-       console.error(error);
+@@ -37,7 +37,7 @@ const createRequestHandler = (build, mode$1) => {
+       router.isRouteErrorResponse(error) && error.error ? error.error : error);
      }
    });
 -  return async function requestHandler(request, loadContext = {}) {
@@ -11,8 +11,8 @@ index 07ac9741921261dea644ca3286754b33ac787890..9a0b575487941dd8a134719c9def8598
      let url = new URL(request.url);
      let matches = routeMatching.matchServerRoutes(routes$1, url.pathname);
      let handleError = error => errorHandler(error, {
-@@ -58,7 +58,7 @@ const createRequestHandler = (build, mode$1) => {
-     } else if (matches && matches[matches.length - 1].route.module.default == null) {
+@@ -60,7 +60,7 @@ const createRequestHandler = (build, mode$1) => {
+     } else if (matches && matches[matches.length - 1].route.module.default == null && matches[matches.length - 1].route.module.ErrorBoundary == null) {
        response = await handleResourceRequestRR(serverMode, staticHandler, matches.slice(-1)[0].route.id, request, loadContext, handleError);
      } else {
 -      response = await handleDocumentRequestRR(serverMode, build, staticHandler, request, loadContext, handleError);
@@ -20,16 +20,16 @@ index 07ac9741921261dea644ca3286754b33ac787890..9a0b575487941dd8a134719c9def8598
      }
      if (request.method === "HEAD") {
        return new Response(null, {
-@@ -157,7 +157,7 @@ function differentiateCatchVersusErrorBoundaries(build, context) {
+@@ -132,7 +132,7 @@ async function handleDataRequestRR(serverMode, staticHandler, routeId, request,
+     });
    }
-   context.errors = errors;
  }
 -async function handleDocumentRequestRR(serverMode, build, staticHandler, request, loadContext, handleError) {
 +async function handleDocumentRequestRR(serverMode, build, staticHandler, request, loadContext, handleError, criticalStyles) {
    let context;
    try {
      context = await staticHandler.query(request, {
-@@ -192,6 +192,7 @@ async function handleDocumentRequestRR(serverMode, build, staticHandler, request
+@@ -163,6 +163,7 @@ async function handleDocumentRequestRR(serverMode, build, staticHandler, request
      manifest: build.assets,
      routeModules: entry.createEntryRouteModules(build.routes),
      staticHandlerContext: context,
@@ -37,13 +37,13 @@ index 07ac9741921261dea644ca3286754b33ac787890..9a0b575487941dd8a134719c9def8598
      serverHandoffString: serverHandoff.createServerHandoffString({
        url: context.location.pathname,
        state: {
-@@ -200,7 +201,8 @@ async function handleDocumentRequestRR(serverMode, build, staticHandler, request
+@@ -170,7 +171,8 @@ async function handleDocumentRequestRR(serverMode, build, staticHandler, request
+         actionData: context.actionData,
          errors: errors.serializeErrors(context.errors, serverMode)
        },
-       future: build.future,
--      dev: build.dev
-+      dev: build.dev,
-+      criticalStyles,
+-      future: build.future
++      future: build.future,
++      criticalStyles
      }),
-     future: build.future
-   };
+     future: build.future,
+     serializeError: err => errors.serializeError(err, serverMode)

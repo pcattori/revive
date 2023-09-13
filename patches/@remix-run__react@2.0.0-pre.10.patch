@@ -1,8 +1,8 @@
 diff --git a/dist/browser.js b/dist/browser.js
-index ef0da4745988ca9394390be6b5f2af81972dd4d2..4e568d61e981a2657a7af93bf4b7b71bee72b128 100644
+index 6f5e907e9377fc24ed2e01e37e68e1a87b1622c4..64e0e9529119946ead66b65c597d1c36db151be8 100644
 --- a/dist/browser.js
 +++ b/dist/browser.js
-@@ -104,7 +104,8 @@ function RemixBrowser(_props) {
+@@ -125,7 +125,8 @@ function RemixBrowser(_props) {
      value: {
        manifest: window.__remixManifest,
        routeModules: window.__remixRouteModules,
@@ -11,94 +11,92 @@ index ef0da4745988ca9394390be6b5f2af81972dd4d2..4e568d61e981a2657a7af93bf4b7b71b
 +      criticalStyles: window.__remixContext.criticalStyles
      }
    }, /*#__PURE__*/React__namespace.createElement(errorBoundaries.RemixErrorBoundary, {
-     location: location,
+     location: location
 diff --git a/dist/components.js b/dist/components.js
-index c1e158eecb2975e491541419c0e3f2636ca0f86e..d203182a9ea38cf3fd875e29353aaac61d8e1bb9 100644
+index ef21b84685f3d32ea76a35f18da5fdad030b9e20..5024f140fef493e56d0fa1f5dcca9c1a5bd31d2e 100644
 --- a/dist/components.js
 +++ b/dist/components.js
-@@ -281,7 +281,8 @@ let fetcherSubmissionWarning = "⚠️ REMIX FUTURE CHANGE : `fetcher.submission
+@@ -193,7 +193,8 @@ function composeEventHandlers(theirHandler, ourHandler) {
  function Links() {
    let {
      manifest,
 -    routeModules
 +    routeModules,
-+    criticalStyles,
++    criticalStyles
    } = useRemixContext();
    let {
      errors,
-@@ -294,7 +295,9 @@ function Links() {
-       warnings.logDeprecationOnce(linksWarning);
-     }
-   }, [links$1]);
--  return /*#__PURE__*/React__namespace.createElement(React__namespace.Fragment, null, links$1.map(link => {
+@@ -201,14 +202,16 @@ function Links() {
+   } = useDataRouterStateContext();
+   let matches = errors ? routerMatches.slice(0, routerMatches.findIndex(m => errors[m.route.id]) + 1) : routerMatches;
+   let keyedLinks = React__namespace.useMemo(() => links.getKeyedLinksForMatches(matches, routeModules, manifest), [matches, routeModules, manifest]);
+-  return /*#__PURE__*/React__namespace.createElement(React__namespace.Fragment, null, keyedLinks.map(({
 +  return /*#__PURE__*/React__namespace.createElement(React__namespace.Fragment, null, [
 +    criticalStyles ? /*#__PURE__*/React__namespace.createElement('style', { key: 'style' }, criticalStyles) : null,
-+    links$1.map(link => {
-     if (links.isPageLinkDescriptor(link)) {
-       return /*#__PURE__*/React__namespace.createElement(PrefetchPageLinks, _rollupPluginBabelHelpers["extends"]({
-         key: link.page
-@@ -328,7 +331,7 @@ function Links() {
-     return /*#__PURE__*/React__namespace.createElement("link", _rollupPluginBabelHelpers["extends"]({
-       key: link.rel + (link.href || "") + (imageSrcSet || "")
-     }, link));
--  }));
-+  })]);
++    keyedLinks.map(({
+     key,
+     link
+   }) => links.isPageLinkDescriptor(link) ? /*#__PURE__*/React__namespace.createElement(PrefetchPageLinks, _rollupPluginBabelHelpers["extends"]({
+     key: key
+   }, link)) : /*#__PURE__*/React__namespace.createElement("link", _rollupPluginBabelHelpers["extends"]({
+     key: key
+-  }, link))));
++  }, link)))]);
  }
  
  /**
 diff --git a/dist/esm/browser.js b/dist/esm/browser.js
-index 889e43159088b1340c2e57e1a58adc1a56c11771..47dfc5abf430ba4b8d3ad56f4ce0b973ec089b6d 100644
+index 243b58370be8a61dbc42477e5b7f75e0e695faba..f18abcf2062e43daca29b5f9b21fad91cd690eb9 100644
 --- a/dist/esm/browser.js
 +++ b/dist/esm/browser.js
-@@ -135,7 +135,8 @@ function RemixBrowser(_props) {
+@@ -161,7 +161,8 @@ function RemixBrowser(_props) {
      value: {
        manifest: window.__remixManifest,
        routeModules: window.__remixRouteModules,
 -      future: window.__remixContext.future
 +      future: window.__remixContext.future,
-+      criticalStyles: window.__remixContext.criticalStyles,
++      criticalStyles: window.__remixContext.criticalStyles
      }
    }, /*#__PURE__*/React.createElement(RemixErrorBoundary, {
-     location: location,
+     location: location
 diff --git a/dist/esm/components.js b/dist/esm/components.js
-index 366a7e5c9041b63b747ff36674d2947502c424b0..2f9d85614c4ccb36888308d358433c820b0a4dde 100644
+index 18f36021d36fafc47c85a5803c9e2779e10b22f7..17b055cf7a6d6fd72bad049d3052117add2ff525 100644
 --- a/dist/esm/components.js
 +++ b/dist/esm/components.js
-@@ -257,7 +257,8 @@ let fetcherSubmissionWarning = "⚠️ REMIX FUTURE CHANGE : `fetcher.submission
+@@ -169,7 +169,8 @@ function composeEventHandlers(theirHandler, ourHandler) {
  function Links() {
    let {
      manifest,
 -    routeModules
 +    routeModules,
-+    criticalStyles,
++    criticalStyles
    } = useRemixContext();
    let {
      errors,
-@@ -270,7 +271,9 @@ function Links() {
-       logDeprecationOnce(linksWarning);
-     }
-   }, [links]);
--  return /*#__PURE__*/React.createElement(React.Fragment, null, links.map(link => {
+@@ -177,14 +178,16 @@ function Links() {
+   } = useDataRouterStateContext();
+   let matches = errors ? routerMatches.slice(0, routerMatches.findIndex(m => errors[m.route.id]) + 1) : routerMatches;
+   let keyedLinks = React.useMemo(() => getKeyedLinksForMatches(matches, routeModules, manifest), [matches, routeModules, manifest]);
+-  return /*#__PURE__*/React.createElement(React.Fragment, null, keyedLinks.map(({
 +  return /*#__PURE__*/React.createElement(React.Fragment, null, [
 +    criticalStyles ? /*#__PURE__*/React.createElement('style', { key: 'style' }, criticalStyles) : null,
-+    links.map(link => {
-     if (isPageLinkDescriptor(link)) {
-       return /*#__PURE__*/React.createElement(PrefetchPageLinks, _extends({
-         key: link.page
-@@ -304,7 +307,7 @@ function Links() {
-     return /*#__PURE__*/React.createElement("link", _extends({
-       key: link.rel + (link.href || "") + (imageSrcSet || "")
-     }, link));
--  }));
-+  })]);
++    keyedLinks.map(({
+     key,
+     link
+   }) => isPageLinkDescriptor(link) ? /*#__PURE__*/React.createElement(PrefetchPageLinks, _extends({
+     key: key
+   }, link)) : /*#__PURE__*/React.createElement("link", _extends({
+     key: key
+-  }, link))));
++  }, link)))]);
  }
  
  /**
 diff --git a/dist/esm/links.js b/dist/esm/links.js
-index 3ca8cf38916d62cb03b0096ba3341e3ce513bfa4..bb9cc45b571ededad8821dc8f2dcf876d6227acf 100644
+index 3aa7b5f618a3ef497a2db73d49aeb7492dab41c9..867012f5c705da0fbbade9ea5ba1b6977fd05603 100644
 --- a/dist/esm/links.js
 +++ b/dist/esm/links.js
-@@ -26,15 +26,21 @@ function getLinksForMatches(matches, routeModules, manifest) {
+@@ -26,15 +26,21 @@ function getKeyedLinksForMatches(matches, routeModules, manifest) {
    let descriptors = matches.map(match => {
      var _module$links;
      let module = routeModules[match.route.id];
@@ -111,10 +109,10 @@ index 3ca8cf38916d62cb03b0096ba3341e3ce513bfa4..bb9cc45b571ededad8821dc8f2dcf876
 +    ];
 +  }).flat(2);
    let preloads = getCurrentPageModulePreloadHrefs(matches, manifest);
-   return dedupe(descriptors, preloads);
+   return dedupeLinkDescriptors(descriptors, preloads);
  }
 -async function prefetchStyleLinks(routeModule) {
--  if (!routeModule.links) return;
+-  if (!routeModule.links || !isPreloadSupported()) return;
 -  let descriptors = routeModule.links();
 -  if (!descriptors) return;
 +async function prefetchStyleLinks(route, routeModule) {
@@ -127,23 +125,23 @@ index 3ca8cf38916d62cb03b0096ba3341e3ce513bfa4..bb9cc45b571ededad8821dc8f2dcf876
    for (let descriptor of descriptors) {
      if (!isPageLinkDescriptor(descriptor) && descriptor.rel === "stylesheet") {
 diff --git a/dist/esm/routes.js b/dist/esm/routes.js
-index 366a0fe9c17dd23843ac5d0f4415c71762135931..72da96967487e24d77d7d48bf229c0b71d7e8b24 100644
+index c33ccae38caa36dc0ca6649592ce8d52652a0677..36d7701ad191812fcd17059ba395022897282fe6 100644
 --- a/dist/esm/routes.js
 +++ b/dist/esm/routes.js
-@@ -107,7 +107,7 @@ function createShouldRevalidate(route, routeModules, needsRevalidation) {
+@@ -121,7 +121,7 @@ function wrapShouldRevalidateForHdr(routeId, routeShouldRevalidate, needsRevalid
  }
  async function loadRouteModuleWithBlockingLinks(route, routeModules) {
    let routeModule = await loadRouteModule(route, routeModules);
 -  await prefetchStyleLinks(routeModule);
-+  await prefetchStyleLinks(route, routeModule);
-   return routeModule;
- }
- function createDataFunction(route, routeModules, isAction) {
++  await prefetchStyleLinks(routeModule, routeModule);
+   return {
+     ...routeModule,
+     default: undefined,
 diff --git a/dist/links.js b/dist/links.js
-index d69280567916589d258e763f308ad000d59550f5..67619a9be07aa734593855b95c0f79f53b00a1db 100644
+index 9565d778da216958e4674ec8258634fcc937a8db..f61d87da47320f19a1164f1ff29f5fb0b929b28b 100644
 --- a/dist/links.js
 +++ b/dist/links.js
-@@ -30,15 +30,21 @@ function getLinksForMatches(matches, routeModules, manifest) {
+@@ -30,15 +30,21 @@ function getKeyedLinksForMatches(matches, routeModules, manifest) {
    let descriptors = matches.map(match => {
      var _module$links;
      let module = routeModules[match.route.id];
@@ -152,14 +150,14 @@ index d69280567916589d258e763f308ad000d59550f5..67619a9be07aa734593855b95c0f79f5
 +    let route = manifest.routes[match.route.id];
 +    return [
 +      route.css ? route.css.map(href => ({ rel: "stylesheet", href })) : [],
-+      ((_module$links = module.links) === null || _module$links === void 0 ? void 0 : _module$links.call(module)) || []
++      ((_module$links = module.links) === null || _module$links === void 0 ? void 0 : _module$links.call(module)) || [],
 +    ];
 +  }).flat(2);
    let preloads = getCurrentPageModulePreloadHrefs(matches, manifest);
-   return dedupe(descriptors, preloads);
+   return dedupeLinkDescriptors(descriptors, preloads);
  }
 -async function prefetchStyleLinks(routeModule) {
--  if (!routeModule.links) return;
+-  if (!routeModule.links || !isPreloadSupported()) return;
 -  let descriptors = routeModule.links();
 -  if (!descriptors) return;
 +async function prefetchStyleLinks(route, routeModule) {
@@ -172,20 +170,20 @@ index d69280567916589d258e763f308ad000d59550f5..67619a9be07aa734593855b95c0f79f5
    for (let descriptor of descriptors) {
      if (!isPageLinkDescriptor(descriptor) && descriptor.rel === "stylesheet") {
 diff --git a/dist/routes.js b/dist/routes.js
-index 938cbf4ff96550d9e937fc75870e52a431f7de5a..fc0636af973b1d9f3124b4d92627b5c56b2f9aa3 100644
+index 48b804e88d786427b0e1bd98e2cce602d0bdfb85..b2ac00292168775e9d3f5c695544d5a9747bd150 100644
 --- a/dist/routes.js
 +++ b/dist/routes.js
-@@ -128,7 +128,7 @@ function createShouldRevalidate(route, routeModules, needsRevalidation) {
+@@ -142,7 +142,7 @@ function wrapShouldRevalidateForHdr(routeId, routeShouldRevalidate, needsRevalid
  }
  async function loadRouteModuleWithBlockingLinks(route, routeModules$1) {
    let routeModule = await routeModules.loadRouteModule(route, routeModules$1);
 -  await links.prefetchStyleLinks(routeModule);
 +  await links.prefetchStyleLinks(route, routeModule);
-   return routeModule;
- }
- function createDataFunction(route, routeModules, isAction) {
+   return {
+     ...routeModule,
+     default: undefined,
 diff --git a/dist/server.js b/dist/server.js
-index 44e4067aa4b0af3c705a0712d3c7d030cd405be9..1741aeca1ac29df532d1fa914b9cf5dc2eb3af1d 100644
+index 57d3da0b0125f7316ea58e0d6a63e3acc134114d..70da457f5de0b8eb0583ac595ff4024ba38c25f9 100644
 --- a/dist/server.js
 +++ b/dist/server.js
 @@ -54,6 +54,7 @@ function RemixServer({
@@ -203,4 +201,4 @@ index 44e4067aa4b0af3c705a0712d3c7d030cd405be9..1741aeca1ac29df532d1fa914b9cf5dc
 +      criticalStyles,
        serverHandoffString,
        future: context.future,
-       abortDelay
+       serializeError: context.serializeError,
