@@ -1,7 +1,7 @@
 lockfileVersion: '6.0'
 
 settings:
-  autoInstallPeers: false
+  autoInstallPeers: true
   excludeLinksFromLockfile: false
 
 patchedDependencies:
@@ -149,7 +149,7 @@ importers:
         version: 2.4.2
       tsup:
         specifier: ^7.1.0
-        version: 7.1.0(ts-node@10.9.1)(typescript@5.1.6)
+        version: 7.1.0(postcss@8.4.24)(ts-node@10.9.1)(typescript@5.1.6)
       vite:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@20.3.2)
@@ -4827,7 +4827,7 @@ packages:
       strip-bom: 3.0.0
     dev: false
 
-  /tsup@7.1.0(ts-node@10.9.1)(typescript@5.1.6):
+  /tsup@7.1.0(postcss@8.4.24)(ts-node@10.9.1)(typescript@5.1.6):
     resolution: {integrity: sha512-mazl/GRAk70j8S43/AbSYXGgvRP54oQeX8Un4iZxzATHt0roW0t6HYDVZIXMw0ZQIpvr1nFMniIVnN5186lW7w==}
     engines: {node: '>=16.14'}
     hasBin: true
@@ -4851,6 +4851,7 @@ packages:
       execa: 5.1.1
       globby: 11.1.0
       joycon: 3.1.1
+      postcss: 8.4.24
       postcss-load-config: 4.0.1(postcss@8.4.24)(ts-node@10.9.1)
       resolve-from: 5.0.0
       rollup: 3.25.3
