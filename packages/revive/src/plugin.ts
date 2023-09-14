@@ -322,7 +322,7 @@ export let revive: () => Plugin[] = () => {
         if (!routeExports.includes('default')) return
 
         let browserExports = routeExports.filter(
-          (x) => !['loader', 'actions'].includes(x)
+          (x) => !['loader', 'action'].includes(x)
         )
 
         // ignore routes without browser exports

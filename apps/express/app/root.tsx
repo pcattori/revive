@@ -1,14 +1,17 @@
-import { LinksFunction } from '@remix-run/node'
+import { LinksFunction, json } from '@remix-run/node'
 import {
+  Form,
   Link,
   Links,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from '@remix-run/react'
 import { cssBundleHref } from '@remix-run/css-bundle'
 
+import { db } from './db.server'
 import globalStyles from './global.css'
 
 export const links: LinksFunction = () => {
@@ -18,7 +21,17 @@ export const links: LinksFunction = () => {
   ]
 }
 
+export const loader = () => {
+  return json(db)
+}
+
+export const action = () => {
+  db.push('stuff')
+  return null
+}
+
 export default function App() {
+  const data = useLoaderData<typeof loader>()
   return (
     <html lang="en">
       <head>
@@ -29,6 +42,10 @@ export default function App() {
       </head>
       <body>
         <h1>outlet begin</h1>
+        <pre>{JSON.stringify(data)}</pre>
+        <Form method="post">
+          <button>Add stuff</button>
+        </Form>
         <ul>
           <li>
             <Link to="/">Home</Link>
