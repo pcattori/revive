@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   '@remix-run/react@2.0.0-pre.10':
-    hash: h5b4dagbujpvrk3mdzlsh6lxaa
+    hash: gquuggvfxo3rcwecuayra66ese
     path: patches/@remix-run__react@2.0.0-pre.10.patch
   '@remix-run/server-runtime@2.0.0-pre.10':
     hash: z5ohtq5abcll6jmzqnabzuluia
@@ -36,7 +36,7 @@ importers:
         version: 2.0.0-pre.10(typescript@5.1.6)
       '@remix-run/react':
         specifier: 2.0.0-pre.10
-        version: 2.0.0-pre.10(patch_hash=h5b4dagbujpvrk3mdzlsh6lxaa)(react-dom@18.2.0)(react@18.2.0)(typescript@5.1.6)
+        version: 2.0.0-pre.10(patch_hash=gquuggvfxo3rcwecuayra66ese)(react-dom@18.2.0)(react@18.2.0)(typescript@5.1.6)
       '@remix-run/serve':
         specifier: 2.0.0-pre.10
         version: 2.0.0-pre.10(typescript@5.1.6)
@@ -1349,7 +1349,7 @@ packages:
       typescript: 5.1.6
     dev: false
 
-  /@remix-run/react@2.0.0-pre.10(patch_hash=h5b4dagbujpvrk3mdzlsh6lxaa)(react-dom@18.2.0)(react@18.2.0)(typescript@5.1.6):
+  /@remix-run/react@2.0.0-pre.10(patch_hash=gquuggvfxo3rcwecuayra66ese)(react-dom@18.2.0)(react@18.2.0)(typescript@5.1.6):
     resolution: {integrity: sha512-FtWRTD4FbMeObk4tSpQn2OQX7jaS8PYsySzQ/9FEFDHdFwoGmbAd4UiVLgEiO1/8oeXfs8kuEepJHK9eWlZNNw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:

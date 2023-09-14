@@ -125,7 +125,7 @@ index 3aa7b5f618a3ef497a2db73d49aeb7492dab41c9..867012f5c705da0fbbade9ea5ba1b697
    for (let descriptor of descriptors) {
      if (!isPageLinkDescriptor(descriptor) && descriptor.rel === "stylesheet") {
 diff --git a/dist/esm/routes.js b/dist/esm/routes.js
-index c33ccae38caa36dc0ca6649592ce8d52652a0677..36d7701ad191812fcd17059ba395022897282fe6 100644
+index c33ccae38caa36dc0ca6649592ce8d52652a0677..fff5720877932dd548cfa7ca01fc6ac1663526c4 100644
 --- a/dist/esm/routes.js
 +++ b/dist/esm/routes.js
 @@ -121,7 +121,7 @@ function wrapShouldRevalidateForHdr(routeId, routeShouldRevalidate, needsRevalid
@@ -133,7 +133,7 @@ index c33ccae38caa36dc0ca6649592ce8d52652a0677..36d7701ad191812fcd17059ba3950228
  async function loadRouteModuleWithBlockingLinks(route, routeModules) {
    let routeModule = await loadRouteModule(route, routeModules);
 -  await prefetchStyleLinks(routeModule);
-+  await prefetchStyleLinks(routeModule, routeModule);
++  await prefetchStyleLinks(route, routeModule);
    return {
      ...routeModule,
      default: undefined,
