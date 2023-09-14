@@ -10,8 +10,8 @@
   },
   "pnpm": {
     "patchedDependencies": {
-      "@remix-run/react@2.0.0-pre.10": "patches/@remix-run__react@2.0.0-pre.10.patch",
-      "@remix-run/server-runtime@2.0.0-pre.10": "patches/@remix-run__server-runtime@2.0.0-pre.10.patch"
+      "@remix-run/react@2.0.0-pre.11": "patches/@remix-run__react@2.0.0-pre.11.patch",
+      "@remix-run/server-runtime@2.0.0-pre.11": "patches/@remix-run__server-runtime@2.0.0-pre.11.patch"
     }
   }
 }
