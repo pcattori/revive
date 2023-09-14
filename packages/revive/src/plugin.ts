@@ -17,6 +17,7 @@ import { createRequestHandler } from './node/adapter.js'
 import { getStylesForUrl } from './styles.js'
 import * as VirtualModule from './vmod.js'
 import { filterExports } from './filter-exports.js'
+import { transformLegacyCssImports } from './legacy-css-imports.js'
 
 export let serverEntryId = VirtualModule.id('server-entry')
 let serverManifestId = VirtualModule.id('server-manifest')
@@ -333,6 +334,20 @@ export let revive: () => Plugin[] = () => {
         return {
           code: result,
           map: null,
+        }
+      },
+    },
+  ]
+}
+
+export let legacyRemixCssImportSemantics: () => Plugin[] = () => {
+  return [
+    {
+      name: 'revive-legacy-remix-css-import-semantics',
+      enforce: 'pre',
+      async transform(code) {
+        if (code.includes('.css"') || code.includes(".css'")) {
+          return transformLegacyCssImports(code)
         }
       },
     },

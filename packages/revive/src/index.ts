@@ -1,1 +1,1 @@
-export { revive } from './plugin.js'
+export { revive, legacyRemixCssImportSemantics } from './plugin.js'

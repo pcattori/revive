@@ -7,11 +7,15 @@ import {
   Scripts,
   ScrollRestoration,
 } from '@remix-run/react'
+import { cssBundleHref } from '@remix-run/css-bundle'
 
-import globalStyles from './global.css?url'
+import globalStyles from './global.css'
 
 export const links: LinksFunction = () => {
-  return [{ rel: 'stylesheet', href: globalStyles }]
+  return [
+    ...(cssBundleHref ? [{ rel: 'stylesheet', href: cssBundleHref }] : []),
+    { rel: 'stylesheet', href: globalStyles },
+  ]
 }
 
 export default function App() {

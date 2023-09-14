@@ -28,6 +28,12 @@ importers:
 
   apps/express:
     dependencies:
+      '@remix-run/css-bundle':
+        specifier: 2.0.0-pre.11
+        version: 2.0.0-pre.11
+      '@remix-run/dev':
+        specifier: 2.0.0-pre.11
+        version: 2.0.0-pre.11(@remix-run/serve@2.0.0-pre.11)(@types/node@20.3.2)(ts-node@10.9.1)(typescript@5.1.6)
       '@remix-run/express':
         specifier: 2.0.0-pre.11
         version: 2.0.0-pre.11(express@4.18.2)(typescript@5.1.6)
@@ -58,6 +64,9 @@ importers:
       react-dom:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
+      source-map-support:
+        specifier: ^0.5.21
+        version: 0.5.21
     devDependencies:
       '@types/react':
         specifier: ^18.2.14
@@ -65,6 +74,9 @@ importers:
       '@types/react-dom':
         specifier: ^18.2.6
         version: 18.2.6
+      chokidar:
+        specifier: ^3.5.3
+        version: 3.5.3
       revive:
         specifier: workspace:*
         version: link:../../packages/revive
@@ -91,7 +103,7 @@ importers:
         version: 7.22.5
       '@remix-run/dev':
         specifier: 2.0.0-pre.11
-        version: 2.0.0-pre.11(@types/node@20.3.2)(ts-node@10.9.1)(typescript@5.1.6)
+        version: 2.0.0-pre.11(@remix-run/serve@2.0.0-pre.11)(@types/node@20.3.2)(ts-node@10.9.1)(typescript@5.1.6)
       '@remix-run/node':
         specifier: 2.0.0-pre.11
         version: 2.0.0-pre.11(typescript@5.1.6)
@@ -1237,7 +1249,12 @@ packages:
     dev: false
     optional: true
 
-  /@remix-run/dev@2.0.0-pre.11(@types/node@20.3.2)(ts-node@10.9.1)(typescript@5.1.6):
+  /@remix-run/css-bundle@2.0.0-pre.11:
+    resolution: {integrity: sha512-zm+O/9E6gdzQ7vOI4Enr4T5QUHhQmW/qG/PKmq2N49xH+9M7RqmSrqgtOl96ylc3QNi0cqEKPzhup7zBygPn7Q==}
+    engines: {node: '>=18.0.0'}
+    dev: false
+
+  /@remix-run/dev@2.0.0-pre.11(@remix-run/serve@2.0.0-pre.11)(@types/node@20.3.2)(ts-node@10.9.1)(typescript@5.1.6):
     resolution: {integrity: sha512-uBPgXD+ML3gDCtEe0oD/y1Ri9v+D3GjGkYDgbY2q+C91gJwT3RTcg726iDEorTIBFD8eqKuRP2SRVjZZU0V/wA==}
     engines: {node: '>=18.0.0'}
     hasBin: true
@@ -1259,6 +1276,7 @@ packages:
       '@babel/traverse': 7.22.8
       '@mdx-js/mdx': 2.3.0
       '@npmcli/package-json': 4.0.1
+      '@remix-run/serve': 2.0.0-pre.11(typescript@5.1.6)
       '@remix-run/server-runtime': 2.0.0-pre.11(patch_hash=z5ohtq5abcll6jmzqnabzuluia)(typescript@5.1.6)
       '@types/mdx': 2.0.7
       '@vanilla-extract/integration': 6.2.1(@types/node@20.3.2)
