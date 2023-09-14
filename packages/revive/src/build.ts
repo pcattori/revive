@@ -33,7 +33,9 @@ export async function build() {
         preserveEntrySignatures: 'exports-only',
         input: serverEntryId,
         output: {
-          entryFileNames: path.basename(config.serverBuildPath),
+          entryFileNames: path
+            .basename(config.serverBuildPath)
+            .replace(/\.js$/, '.cjs'),
           format: 'cjs',
         },
       },
