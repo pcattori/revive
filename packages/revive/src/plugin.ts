@@ -348,14 +348,14 @@ export let revive: () => Plugin[] = () => {
           noExternal: ['@remix-run/react'],
         },
       }),
-      async resolveId(id, importer) {
+      resolveId(id, importer) {
         if (id === '@remix-run/react') {
           return importer === VirtualModule.resolve(remixReactProxyId)
             ? this.resolve('@remix-run/react', importer, { skipSelf: true })
             : VirtualModule.resolve(remixReactProxyId)
         }
       },
-      async load(id) {
+      load(id) {
         if (id === VirtualModule.resolve(remixReactProxyId)) {
           return [
             // LiveReload contents are coupled to the compiler in @remix-run/dev
@@ -374,7 +374,7 @@ export let legacyRemixCssImportSemantics: () => Plugin[] = () => {
     {
       name: 'revive-legacy-remix-css-import-semantics',
       enforce: 'pre',
-      async transform(code) {
+      transform(code) {
         if (code.includes('.css"') || code.includes(".css'")) {
           return transformLegacyCssImports(code)
         }
