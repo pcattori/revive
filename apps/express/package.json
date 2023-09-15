@@ -3,10 +3,10 @@
   "type": "module",
   "scripts": {
     "dev": "revive dev",
-    "dev:remix": "remix dev --manual -c \"node server.cjs\"",
+    "dev:remix": "remix dev --manual -c \"node server.js\"",
     "build": "revive build",
     "build:remix": "remix build",
-    "serve": "remix-serve build/index.cjs",
+    "serve": "remix-serve build/index.js",
     "serve:custom": "node server.js"
   },
   "dependencies": {

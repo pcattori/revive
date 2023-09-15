@@ -16,7 +16,7 @@ installGlobals()
  * @typedef {import('@remix-run/node').ServerBuild} ServerBuild
  */
 
-const BUILD_PATH = path.resolve('build/index.cjs')
+const BUILD_PATH = path.resolve('build/index.js')
 const initialBuild = await reimportServer()
 
 const app = express()
