@@ -7,6 +7,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  LiveReload,
   useLoaderData,
 } from '@remix-run/react'
 import { cssBundleHref } from '@remix-run/css-bundle'
@@ -59,6 +60,7 @@ export default function App() {
         <h1>outlet end</h1>
         <ScrollRestoration />
         <Scripts />
+        <LiveReload />
       </body>
     </html>
   )

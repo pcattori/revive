@@ -22,6 +22,7 @@ import { transformLegacyCssImports } from './legacy-css-imports.js'
 export let serverEntryId = VirtualModule.id('server-entry')
 let serverManifestId = VirtualModule.id('server-manifest')
 let browserManifestId = VirtualModule.id('browser-manifest')
+let remixReactProxyId = VirtualModule.id('remix-react-proxy')
 
 const normalizePath = (p: string) => {
   let unixPath = p.replace(/[\\/]+/g, '/').replace(/^([a-zA-Z]+:|\.\/)/, '')
@@ -334,6 +335,34 @@ export let revive: () => Plugin[] = () => {
         return {
           code: result,
           map: null,
+        }
+      },
+    },
+    {
+      name: 'revive-remix-react-proxy',
+      enforce: 'pre',
+      config: () => ({
+        ssr: {
+          // This package can't be external, otherwise we can't proxy it on the
+          // server where packages are typically not processed by Vite.
+          noExternal: ['@remix-run/react'],
+        },
+      }),
+      async resolveId(id, importer) {
+        if (id === '@remix-run/react') {
+          return importer === VirtualModule.resolve(remixReactProxyId)
+            ? this.resolve('@remix-run/react', importer, { skipSelf: true })
+            : VirtualModule.resolve(remixReactProxyId)
+        }
+      },
+      async load(id) {
+        if (id === VirtualModule.resolve(remixReactProxyId)) {
+          return [
+            // LiveReload contents are coupled to the compiler in @remix-run/dev
+            // so we replace it with a no-op component to prevent errors.
+            'export * from "@remix-run/react";',
+            'export const LiveReload = () => null;',
+          ].join('\n')
         }
       },
     },
