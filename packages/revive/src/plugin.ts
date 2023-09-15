@@ -18,6 +18,7 @@ import { getStylesForUrl } from './styles.js'
 import * as VirtualModule from './vmod.js'
 import { filterExports } from './filter-exports.js'
 import { transformLegacyCssImports } from './legacy-css-imports.js'
+import { replaceImportSpecifier } from './replace-import-specifier.js'
 
 export let serverEntryId = VirtualModule.id('server-entry')
 let serverManifestId = VirtualModule.id('server-manifest')
@@ -341,19 +342,31 @@ export let revive: () => Plugin[] = () => {
     {
       name: 'revive-remix-react-proxy',
       enforce: 'pre',
-      config: () => ({
-        ssr: {
-          // This package can't be external, otherwise we can't proxy it on the
-          // server where packages are typically not processed by Vite.
-          noExternal: ['@remix-run/react'],
-        },
-      }),
-      resolveId(id, importer) {
-        if (id === '@remix-run/react') {
-          return importer === VirtualModule.resolve(remixReactProxyId)
-            ? this.resolve('@remix-run/react', importer, { skipSelf: true })
-            : VirtualModule.resolve(remixReactProxyId)
+      resolveId(id) {
+        if (id === remixReactProxyId) {
+          return VirtualModule.resolve(remixReactProxyId)
         }
+      },
+      transform(code, id) {
+        // Don't transform the proxy itself, otherwise it will import itself
+        if (id === VirtualModule.resolve(remixReactProxyId)) {
+          return
+        }
+
+        // Don't transform files that don't need the proxy
+        if (
+          !code.includes('@remix-run/react') &&
+          !code.includes('LiveReload')
+        ) {
+          return
+        }
+
+        // Rewrite imports to use the proxy
+        return replaceImportSpecifier({
+          code,
+          specifier: '@remix-run/react',
+          replaceWith: remixReactProxyId,
+        })
       },
       load(id) {
         if (id === VirtualModule.resolve(remixReactProxyId)) {
