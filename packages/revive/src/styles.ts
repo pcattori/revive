@@ -9,14 +9,19 @@ type ServerRoute = ServerRouteManifest[string]
 
 // Style collection logic adapted from solid-start: https://github.com/solidjs/solid-start
 
-// Vite doesn't expose this so we just copy the list for now
-// https://github.com/vitejs/vite/blob/3edd1af56e980aef56641a5a51cf2932bb580d41/packages/vite/src/node/plugins/css.ts#L96
-const style_pattern = /\.(css|less|sass|scss|styl|stylus|pcss|postcss)$/
-const module_style_pattern =
-  /\.module\.(css|less|sass|scss|styl|stylus|pcss|postcss)$/
+// Vite doesn't expose these so we just copy the list for now
+// https://github.com/vitejs/vite/blob/d6bde8b03d433778aaed62afc2be0630c8131908/packages/vite/src/node/constants.ts#L49C23-L50
+const cssFileRegExp =
+  /\.(css|less|sass|scss|styl|stylus|pcss|postcss|sss)(?:$|\?)/
+// https://github.com/vitejs/vite/blob/d6bde8b03d433778aaed62afc2be0630c8131908/packages/vite/src/node/plugins/css.ts#L160
+const cssModulesRegExp = new RegExp(`\\.module${cssFileRegExp.source}`)
+
+const isCssFile = (file: string) => cssFileRegExp.test(file)
+export const isCssModulesFile = (file: string) => cssModulesRegExp.test(file)
 
 const getStylesForFiles = async (
   viteServer: ViteDevServer,
+  cssModulesManifest: Record<string, string>,
   files: string[]
 ): Promise<string | undefined> => {
   const styles: Record<string, string> = {}
@@ -46,16 +51,19 @@ const getStylesForFiles = async (
   for (const dep of deps) {
     if (
       dep.file &&
-      style_pattern.test(dep.file) &&
+      isCssFile(dep.file) &&
       !dep.url.endsWith('?url') // Ignore styles that resolved as URLs, otherwise we'll end up injecting URLs into the style tag contents
     ) {
       try {
-        const mod = await viteServer.ssrLoadModule(dep.url)
-        if (module_style_pattern.test(dep.file)) {
-          throw new Error('CSS Modules support not yet implemented')
-        } else {
-          styles[dep.url] = mod.default
+        const css = isCssModulesFile(dep.file)
+          ? cssModulesManifest[dep.file]
+          : (await viteServer.ssrLoadModule(dep.url)).default
+
+        if (css === undefined) {
+          throw new Error()
         }
+
+        styles[dep.url] = css
       } catch {
         console.warn(`Could not load ${dep.file}`)
         // this can happen with dynamically imported modules, I think
@@ -163,6 +171,7 @@ const routeFilesForUrl = (
 export const getStylesForUrl = async (
   vite: ViteDevServer,
   config: RemixConfig,
+  cssModulesManifest: Record<string, string>,
   build: ServerBuild,
   url: string | undefined
 ): Promise<string | undefined> => {
@@ -171,7 +180,11 @@ export const getStylesForUrl = async (
   }
 
   const documentRouteFiles = routeFilesForUrl(config, build, url)
-  const styles = await getStylesForFiles(vite, documentRouteFiles)
+  const styles = await getStylesForFiles(
+    vite,
+    cssModulesManifest,
+    documentRouteFiles
+  )
 
   return styles
 }

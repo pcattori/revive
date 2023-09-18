@@ -14,7 +14,7 @@ import {
 import jsesc from 'jsesc'
 
 import { createRequestHandler } from './node/adapter.js'
-import { getStylesForUrl } from './styles.js'
+import { getStylesForUrl, isCssModulesFile } from './styles.js'
 import * as VirtualModule from './vmod.js'
 import { filterExports } from './filter-exports.js'
 import { transformLegacyCssImports } from './legacy-css-imports.js'
@@ -201,6 +201,7 @@ const getDevManifest = async (): Promise<Manifest> => {
 
 export let revive: () => Plugin[] = () => {
   let command: ResolvedViteConfig['command']
+  let cssModulesManifest: Record<string, string> = {}
   let ssrBuildContext:
     | { isSsrBuild: false }
     | { isSsrBuild: true; manifest: Manifest }
@@ -216,6 +217,11 @@ export let revive: () => Plugin[] = () => {
           viteConfig.build.ssr && command === 'build'
             ? { isSsrBuild: true, manifest: await createBuildManifest() }
             : { isSsrBuild: false }
+      },
+      transform(code, id) {
+        if (isCssModulesFile(id)) {
+          cssModulesManifest[id] = code
+        }
       },
       configureServer(vite) {
         return () => {
@@ -242,13 +248,27 @@ export let revive: () => Plugin[] = () => {
               if (url?.startsWith('/_critical.css?pathname=')) {
                 const pathname = url.split('?pathname=')[1]
                 res.setHeader('Content-Type', 'text/css')
-                res.end(await getStylesForUrl(vite, config, build, pathname))
+                res.end(
+                  await getStylesForUrl(
+                    vite,
+                    config,
+                    cssModulesManifest,
+                    build,
+                    pathname
+                  )
+                )
                 return
               }
 
               const handle = createRequestHandler(build, {
                 mode: 'development',
-                criticalStyles: await getStylesForUrl(vite, config, build, url),
+                criticalStyles: await getStylesForUrl(
+                  vite,
+                  config,
+                  cssModulesManifest,
+                  build,
+                  url
+                ),
               })
 
               await handle(req, res)
