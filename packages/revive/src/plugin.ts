@@ -24,6 +24,7 @@ export let serverEntryId = VirtualModule.id('server-entry')
 let serverManifestId = VirtualModule.id('server-manifest')
 let browserManifestId = VirtualModule.id('browser-manifest')
 let remixReactProxyId = VirtualModule.id('remix-react-proxy')
+let hmrRuntimeId = VirtualModule.id('hmr-runtime')
 
 const normalizePath = (p: string) => {
   let unixPath = p.replace(/[\\/]+/g, '/').replace(/^([a-zA-Z]+:|\.\/)/, '')
@@ -392,11 +393,29 @@ export let revive: () => Plugin[] = () => {
         if (id === VirtualModule.resolve(remixReactProxyId)) {
           return [
             // LiveReload contents are coupled to the compiler in @remix-run/dev
-            // so we replace it with a no-op component to prevent errors.
+            // so we replace it to prevent errors.
             'export * from "@remix-run/react";',
-            'export const LiveReload = () => null;',
+            'export const LiveReload = process.env.NODE_ENV !== "development" ? () => null : () => (',
+            ' <script type="module">',
+            '   import RefreshRuntime from "@react-refresh"',
+            '   RefreshRuntime.injectIntoGlobalHook(window)',
+            '   window.$RefreshReg$ = () => {}',
+            '   window.$RefreshSig$ = () => (type) => type',
+            '   window.__vite_plugin_react_preamble_installed__ = true',
+            ' </script>',
+            ');',
           ].join('\n')
         }
+      },
+    },
+    {
+      name: 'revive-hmr-runtime',
+      enforce: 'pre',
+      resolveId(id) {
+        if (id === hmrRuntimeId) return VirtualModule.resolve(hmrRuntimeId)
+      },
+      load(id) {
+        return ['const exports = {}', 'export default exports'].join('\n')
       },
     },
   ]
