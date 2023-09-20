@@ -1,5 +1,6 @@
 import * as path from 'node:path'
 import * as fs from 'node:fs/promises'
+import { createRequire } from 'node:module'
 import { BinaryLike, createHash } from 'node:crypto'
 import { RemixConfig, readConfig } from '@remix-run/dev/dist/config.js'
 import { Manifest } from '@remix-run/dev/dist/manifest.js'
@@ -12,6 +13,7 @@ import {
   normalizePath as viteNormalizePath,
 } from 'vite'
 import jsesc from 'jsesc'
+import babel from '@babel/core'
 
 import { createRequestHandler } from './node/adapter.js'
 import { getStylesForUrl, isCssModulesFile } from './styles.js'
@@ -210,7 +212,10 @@ export let revive: () => Plugin[] = () => {
   return [
     {
       name: 'revive',
-      config: () => ({ appType: 'custom' }),
+      config: () => ({
+        appType: 'custom',
+        experimental: { hmrPartialAccept: true },
+      }),
       async configResolved(viteConfig) {
         command = viteConfig.command
 
@@ -389,21 +394,28 @@ export let revive: () => Plugin[] = () => {
           replaceWith: remixReactProxyId,
         })
       },
-      load(id) {
+      async load(id) {
         if (id === VirtualModule.resolve(remixReactProxyId)) {
+          // TODO: probably need a Script component that manages the order of the dev scripts relative to prod scripts
           return [
             // LiveReload contents are coupled to the compiler in @remix-run/dev
             // so we replace it to prevent errors.
+            'import { createElement } from "react";',
             'export * from "@remix-run/react";',
-            'export const LiveReload = process.env.NODE_ENV !== "development" ? () => null : () => (',
-            ' <script type="module">',
-            '   import RefreshRuntime from "@react-refresh"',
+            'export const LiveReload = process.env.NODE_ENV !== "development" ? () => null : ',
+            '() => createElement("script", {',
+            ' type: "module",',
+            ' suppressHydrationWarning: true,',
+            ' dangerouslySetInnerHTML: { __html: `',
+            `   import RefreshRuntime from "${VirtualModule.url(
+              hmrRuntimeId
+            )}"`,
             '   RefreshRuntime.injectIntoGlobalHook(window)',
             '   window.$RefreshReg$ = () => {}',
             '   window.$RefreshSig$ = () => (type) => type',
             '   window.__vite_plugin_react_preamble_installed__ = true',
-            ' </script>',
-            ');',
+            ' `}',
+            '});',
           ].join('\n')
         }
       },
@@ -414,11 +426,112 @@ export let revive: () => Plugin[] = () => {
       resolveId(id) {
         if (id === hmrRuntimeId) return VirtualModule.resolve(hmrRuntimeId)
       },
-      load(id) {
-        return ['const exports = {}', 'export default exports'].join('\n')
+      async load(id) {
+        const _require = createRequire(import.meta.url)
+        const reactRefreshDir = path.dirname(
+          _require.resolve('react-refresh/package.json')
+        )
+        const runtimeFilePath = path.join(
+          reactRefreshDir,
+          'cjs/react-refresh-runtime.development.js'
+        )
+        if (id !== VirtualModule.resolve(hmrRuntimeId)) return
+        return [
+          'const exports = {}',
+          await fs.readFile(runtimeFilePath, 'utf-8'),
+          await fs.readFile(_require.resolve('./refresh-utils.cjs'), 'utf-8'),
+          'export default exports',
+        ].join('\n')
+      },
+    },
+    {
+      name: 'revive-react-refresh-babel',
+      enforce: 'pre',
+      async transform(code, id, options) {
+        if (id.includes('/node_modules/')) return
+
+        const [filepath] = id.split('?')
+        if (!/.[tj]sx?$/.test(filepath)) return
+
+        const devRuntime = 'react/jsx-dev-runtime'
+        const ssr = options?.ssr === true
+        const isJSX = filepath.endsWith('x')
+        const useFastRefresh = !ssr && (isJSX || code.includes(devRuntime))
+
+        const plugins = []
+        if (useFastRefresh) {
+          plugins.push('react-refresh/babel')
+        }
+
+        const result = await babel.transformAsync(code, {
+          filename: id,
+          sourceFileName: filepath,
+          parserOpts: {
+            sourceType: 'module',
+            allowAwaitOutsideFunction: true,
+            plugins: ['jsx', 'typescript'],
+          },
+          plugins,
+          sourceMaps: true,
+        })
+
+        if (result) {
+          let code = result.code!
+          if (useFastRefresh && /\$Refresh(?:Reg|Sig)\$\(/.test(code)) {
+            code = addRefreshWrapper(code, id)
+          }
+          return { code, map: result.map }
+        }
       },
     },
   ]
+}
+
+const header = `
+import RefreshRuntime from "${hmrRuntimeId}";
+
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+
+if (import.meta.hot && !inWebWorker) {
+  if (!window.__vite_plugin_react_preamble_installed__) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong. " +
+      "See https://github.com/vitejs/vite-plugin-react/pull/11#discussion_r430879201"
+    );
+  }
+
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = (type, id) => {
+    RefreshRuntime.register(type, __SOURCE__ + " " + id)
+  };
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}`.replace(/\n+/g, '')
+
+const footer = `
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh(__SOURCE__, currentExports);
+    // TODO: accept exports that are Remix exports that eventually make it into a component via Route
+    // eg links -> <Links />
+    // eg meta -> <Meta />
+    import.meta.hot.acceptExports(["default", "meta"], () => {
+      RefreshRuntime.enqueueUpdate();
+    });
+  });
+}`
+
+function addRefreshWrapper(code: string, id: string): string {
+  return (
+    header.replace('__SOURCE__', JSON.stringify(id)) +
+    code +
+    footer.replace('__SOURCE__', JSON.stringify(id))
+  )
 }
 
 export let legacyRemixCssImportSemantics: () => Plugin[] = () => {
