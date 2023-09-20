@@ -80,6 +80,7 @@ export const plugins: Plugin[] = [
       return [
         'const exports = {}',
         await fs.readFile(runtimeFilePath, 'utf8'),
+        await fs.readFile(_require.resolve('./refresh-utils.cjs'), 'utf8'),
         'export default exports',
       ].join('\n')
     },
@@ -123,6 +124,47 @@ export const plugins: Plugin[] = [
 ]
 
 function addRefreshWrapper(code: string, id: string): string {
-  // TODO
-  return code
+  return (
+    HEADER.replace('__SOURCE__', JSON.stringify(id)) +
+    code +
+    FOOTER.replace('__SOURCE__', JSON.stringify(id))
+  )
 }
+
+const HEADER = `
+import RefreshRuntime from "${hmrRuntimeId}";
+
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+
+if (import.meta.hot && !inWebWorker) {
+  if (!window.__vite_plugin_react_preamble_installed__) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong. " +
+      "See https://github.com/vitejs/vite-plugin-react/pull/11#discussion_r430879201"
+    );
+  }
+
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = (type, id) => {
+    RefreshRuntime.register(type, __SOURCE__ + " " + id)
+  };
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}`.replace(/\n+/g, '')
+
+const FOOTER = `
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh(__SOURCE__, currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate(currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}`
