@@ -54,6 +54,9 @@ export default function App() {
           <li>
             <Link to="/blah">Blah</Link>
           </li>
+          <li>
+            <Link to="/mdx">MDX</Link>
+          </li>
         </ul>
 
         <Outlet />

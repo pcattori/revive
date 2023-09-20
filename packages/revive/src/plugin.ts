@@ -4,12 +4,14 @@ import { BinaryLike, createHash } from 'node:crypto'
 import { RemixConfig, readConfig } from '@remix-run/dev/dist/config.js'
 import { Manifest } from '@remix-run/dev/dist/manifest.js'
 import { ServerBuild } from '@remix-run/server-runtime'
-import { getRouteModuleExports } from '@remix-run/dev/dist/compiler/utils/routeExports.js'
 import {
   Plugin,
   Manifest as ViteManifest,
   ResolvedConfig as ResolvedViteConfig,
   normalizePath as viteNormalizePath,
+  createServer as createViteDevServer,
+  ViteDevServer,
+  UserConfig as ViteUserConfig,
 } from 'vite'
 import jsesc from 'jsesc'
 
@@ -114,7 +116,33 @@ const writeFileSafe = async (file: string, contents: string): Promise<void> => {
   await fs.writeFile(file, contents)
 }
 
-const createBuildManifest = async (): Promise<Manifest> => {
+const getRouteModuleExports = async (
+  viteChildCompiler: ViteDevServer | null,
+  config: RemixConfig,
+  routeFile: string
+) => {
+  if (!viteChildCompiler) {
+    throw new Error('viteChildCompiler is undefined')
+  }
+  const routePath = path.join(config.appDirectory, routeFile)
+
+  // TODO: Use transformRequest and parse the generated code instead of using
+  // ssrLoadModule to avoid eval'ing the module? It would be very surprising to
+  // see my app code being executed as part of the Vite build process.
+  // const moduleSource = (
+  //   await viteChildCompiler?.transformRequest(
+  //     `/@fs${routePath.split(path.sep).join('/')}`,
+  //     { ssr: true }
+  //   )
+  // )?.code
+
+  const routeModule = await viteChildCompiler?.ssrLoadModule(routePath)
+  return Object.keys(routeModule)
+}
+
+const createBuildManifest = async (
+  viteChildCompiler: ViteDevServer | null
+): Promise<Manifest> => {
   const config = await readConfig()
   const viteManifest = JSON.parse(
     await fs.readFile(
@@ -131,7 +159,11 @@ const createBuildManifest = async (): Promise<Manifest> => {
 
   const routes: Manifest['routes'] = {}
   for (const [key, route] of Object.entries(config.routes)) {
-    const sourceExports = await getRouteModuleExports(config, route.id)
+    const sourceExports = await getRouteModuleExports(
+      viteChildCompiler,
+      config,
+      route.file
+    )
 
     routes[key] = {
       id: route.id,
@@ -165,12 +197,18 @@ const createBuildManifest = async (): Promise<Manifest> => {
   return manifest
 }
 
-const getDevManifest = async (): Promise<Manifest> => {
+const getDevManifest = async (
+  viteChildCompiler: ViteDevServer | null
+): Promise<Manifest> => {
   const config = await readConfig()
   const routes: Manifest['routes'] = {}
 
   for (const [key, route] of Object.entries(config.routes)) {
-    const sourceExports = await getRouteModuleExports(config, route.id)
+    const sourceExports = await getRouteModuleExports(
+      viteChildCompiler,
+      config,
+      route.file
+    )
 
     routes[key] = {
       id: route.id,
@@ -178,7 +216,9 @@ const getDevManifest = async (): Promise<Manifest> => {
       path: route.path,
       index: route.index,
       caseSensitive: route.caseSensitive,
-      module: resolveFSPath(resolveRelativeRouteFilePath(route, config)),
+      module: `${resolveFSPath(
+        resolveRelativeRouteFilePath(route, config)
+      )}?import`, // Ensure the Vite dev server responds with a JS module
       hasAction: sourceExports.includes('action'),
       hasLoader: sourceExports.includes('loader'),
       hasErrorBoundary: sourceExports.includes('ErrorBoundary'),
@@ -201,27 +241,65 @@ const getDevManifest = async (): Promise<Manifest> => {
 
 export let revive: () => Plugin[] = () => {
   let command: ResolvedViteConfig['command']
+
   let cssModulesManifest: Record<string, string> = {}
   let ssrBuildContext:
     | { isSsrBuild: false }
-    | { isSsrBuild: true; manifest: Manifest }
+    | { isSsrBuild: true; getManifest: () => Promise<Manifest> }
+
+  let viteChildCompiler: ViteDevServer | null = null
+  let userConfig: ViteUserConfig
 
   return [
     {
       name: 'revive',
-      config: () => ({ appType: 'custom' }),
+      config: (config) => {
+        userConfig = config
+        return { appType: 'custom' }
+      },
       async configResolved(viteConfig) {
         command = viteConfig.command
 
+        viteChildCompiler = await createViteDevServer({
+          ...userConfig,
+          plugins: [
+            ...(userConfig.plugins ?? [])
+              .flat()
+              // Exclude this plugin from the child compiler to prevent an
+              // infinite loop (plugin creates a child compiler with the same
+              // plugin that creates another child compiler, repeat ad
+              // infinitum), and to prevent the manifest from being written to
+              // disk from the child compiler. This is important in the
+              // production build because the child compiler is a Vite dev
+              // server and will generate incorrect manifests.
+              .filter(
+                (plugin) =>
+                  typeof plugin === 'object' &&
+                  plugin !== null &&
+                  'name' in plugin &&
+                  plugin.name !== 'revive'
+              ),
+          ],
+          configFile: false,
+        })
+        await viteChildCompiler.pluginContainer.buildStart({})
+
         ssrBuildContext =
           viteConfig.build.ssr && command === 'build'
-            ? { isSsrBuild: true, manifest: await createBuildManifest() }
+            ? {
+                isSsrBuild: true,
+                getManifest: async () =>
+                  await createBuildManifest(viteChildCompiler),
+              }
             : { isSsrBuild: false }
       },
       transform(code, id) {
         if (isCssModulesFile(id)) {
           cssModulesManifest[id] = code
         }
+      },
+      async writeBundle() {
+        await viteChildCompiler?.close()
       },
       configureServer(vite) {
         return () => {
@@ -302,8 +380,8 @@ export let revive: () => Plugin[] = () => {
           }
           case VirtualModule.resolve(serverManifestId): {
             const manifest = ssrBuildContext.isSsrBuild
-              ? ssrBuildContext.manifest
-              : await getDevManifest()
+              ? await ssrBuildContext.getManifest()
+              : await getDevManifest(viteChildCompiler)
 
             return `export default ${jsesc(manifest, { es6: true })};`
           }
@@ -312,7 +390,7 @@ export let revive: () => Plugin[] = () => {
               throw new Error('This module only exists in development')
             }
 
-            const manifest = await getDevManifest()
+            const manifest = await getDevManifest(viteChildCompiler)
 
             return `window.__remixManifest=${jsesc(manifest, { es6: true })};`
           }
@@ -338,7 +416,11 @@ export let revive: () => Plugin[] = () => {
         )
         if (!route) return
 
-        const routeExports = await getRouteModuleExports(config, route.id)
+        const routeExports = await getRouteModuleExports(
+          viteChildCompiler,
+          config,
+          route.file
+        )
 
         // ignore routes without component
         if (!routeExports.includes('default')) return
@@ -350,8 +432,9 @@ export let revive: () => Plugin[] = () => {
         // ignore routes without browser exports
         if (browserExports.length === 0) return
 
-        const filtered = filterExports(id, code, browserExports)
-        const result = filtered.code
+        const result = /\.[cm]?[jt]sx?$/.test(id)
+          ? filterExports(id, code, browserExports).code
+          : code // TODO: Filter exports from non-JS route files like MDX?
 
         return {
           code: result,
