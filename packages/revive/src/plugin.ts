@@ -207,6 +207,37 @@ export let revive: () => Plugin[] = () => {
 
   return [
     {
+      name: 'revive-react-refresh-preamble',
+      enforce: 'pre',
+      async transform(code, id) {
+        let config = await readConfig()
+        if (!id.startsWith(config.appDirectory)) return
+        let routePath = path.relative(config.appDirectory, id)
+        let route = Object.values(config.routes).find(
+          (r) => r.file === routePath
+        )
+
+        if (!route) return
+
+        if (route.id === 'root') {
+          return code.replace(
+            /<Scripts \/>/,
+            [
+              '<script type="module" src="/@vite/client" />',
+              '<script type="module" dangerouslySetInnerHTML={{',
+              '__html: `import RefreshRuntime from "/@react-refresh"',
+              'RefreshRuntime.injectIntoGlobalHook(window)',
+              'window.$RefreshReg$ = () => {}',
+              'window.$RefreshSig$ = () => (type) => type',
+              'window.__vite_plugin_react_preamble_installed__ = true`,',
+              '}} />',
+              '<Scripts />',
+            ].join('\n')
+          )
+        }
+      },
+    },
+    {
       name: 'revive',
       config: () => ({ appType: 'custom' }),
       async configResolved(viteConfig) {
