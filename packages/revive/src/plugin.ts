@@ -298,9 +298,6 @@ export let revive: () => Plugin[] = () => {
           cssModulesManifest[id] = code
         }
       },
-      async writeBundle() {
-        await viteChildCompiler?.close()
-      },
       configureServer(vite) {
         return () => {
           vite.middlewares.use(async (req, res, next) => {
@@ -355,6 +352,9 @@ export let revive: () => Plugin[] = () => {
             }
           })
         }
+      },
+      async buildEnd() {
+        await viteChildCompiler?.close()
       },
     },
     {
