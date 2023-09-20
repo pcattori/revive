@@ -2,6 +2,7 @@ import * as fs from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import * as path from 'node:path'
 
+import babel from '@babel/core'
 import { type Plugin } from 'vite'
 
 import * as VirtualModule from './vmod.js'
@@ -83,4 +84,45 @@ export const plugins: Plugin[] = [
       ].join('\n')
     },
   },
+  {
+    name: 'revive-react-refresh-babel',
+    enforce: 'pre',
+    async transform(code, id, options) {
+      if (id.includes('/node_modules/')) return
+
+      const [filepath] = id.split('?')
+      if (!/.[tj]sx?$/.test(filepath)) return
+
+      const devRuntime = 'react/jsx-dev-runtime'
+      const ssr = options?.ssr === true
+      const isJSX = filepath.endsWith('x')
+      const useFastRefresh = !ssr && (isJSX || code.includes(devRuntime))
+      if (!useFastRefresh) return
+
+      const result = await babel.transformAsync(code, {
+        filename: id,
+        sourceFileName: filepath,
+        parserOpts: {
+          sourceType: 'module',
+          allowAwaitOutsideFunction: true,
+          plugins: ['jsx', 'typescript'],
+        },
+        plugins: ['react-refresh/babel'],
+        sourceMaps: true,
+      })
+      if (result === null) return
+
+      code = result.code!
+      const refreshContentRE = /\$Refresh(?:Reg|Sig)\$\(/
+      if (refreshContentRE.test(code)) {
+        code = addRefreshWrapper(code, id)
+      }
+      return { code, map: result.map }
+    },
+  },
 ]
+
+function addRefreshWrapper(code: string, id: string): string {
+  // TODO
+  return code
+}
