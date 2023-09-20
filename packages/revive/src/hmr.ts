@@ -154,6 +154,8 @@ if (import.meta.hot && !inWebWorker) {
   window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
 }`.replace(/\n+/g, '')
 
+// TODO: use acceptExports for component exports in non-route files
+// handle Remix exports (meta,links,headers) only for route files
 const FOOTER = `
 if (import.meta.hot && !inWebWorker) {
   window.$RefreshReg$ = prevRefreshReg;
@@ -161,10 +163,14 @@ if (import.meta.hot && !inWebWorker) {
 
   RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
     RefreshRuntime.registerExportsForReactRefresh(__SOURCE__, currentExports);
-    import.meta.hot.accept((nextExports) => {
+    import.meta.hot.acceptExports(["default", "headers", "links", "meta"], (nextExports) => {
       if (!nextExports) return;
-      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate(currentExports, nextExports);
-      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+      for (let xport of ["headers", "links", "meta"]) {
+        if (!RefreshRuntime.isSameFunction(currentExports[xport], nextExports[xport])) {
+          return import.meta.hot.invalidate();
+        }
+      }
+      RefreshRuntime.enqueueUpdate();
     });
   });
 }`

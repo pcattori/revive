@@ -27,47 +27,24 @@ function registerExportsForReactRefresh(filename, moduleExports) {
   }
 }
 
-function validateRefreshBoundaryAndEnqueueUpdate(prevExports, nextExports) {
-  if (!predicateOnExport(prevExports, (key) => key in nextExports)) {
-    return 'Could not Fast Refresh (export removed)'
-  }
-  if (!predicateOnExport(nextExports, (key) => key in prevExports)) {
-    return 'Could not Fast Refresh (new export)'
-  }
-
-  let hasExports = false
-  const allExportsAreComponentsOrUnchanged = predicateOnExport(
-    nextExports,
-    (key, value) => {
-      hasExports = true
-      if (exports.isLikelyComponentType(value)) return true
-      return prevExports[key] === nextExports[key]
-    }
-  )
-  if (hasExports && allExportsAreComponentsOrUnchanged) {
-    enqueueUpdate()
-  } else {
-    return 'Could not Fast Refresh. Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports'
-  }
-}
-
-function predicateOnExport(moduleExports, predicate) {
-  for (const key in moduleExports) {
-    if (key === '__esModule') continue
-    const desc = Object.getOwnPropertyDescriptor(moduleExports, key)
-    if (desc && desc.get) return false
-    if (!predicate(key, moduleExports[key])) return false
-  }
-  return true
-}
-
 // Hides vite-ignored dynamic import so that Vite can skip analysis if no other
 // dynamic import is present (https://github.com/vitejs/vite/pull/12732)
 function __hmr_import(module) {
   return import(/* @vite-ignore */ module)
 }
 
+// HACK: does not account for changes to variables from outer scopes
+// but this shouldn't be needed after we integrate HDR
+function isSameFunction(a, b) {
+  if (a === undefined && b === undefined) return true
+  return (
+    typeof a === 'function' &&
+    typeof b === 'function' &&
+    a.toString() === b.toString()
+  )
+}
+
 exports.__hmr_import = __hmr_import
 exports.registerExportsForReactRefresh = registerExportsForReactRefresh
-exports.validateRefreshBoundaryAndEnqueueUpdate =
-  validateRefreshBoundaryAndEnqueueUpdate
+exports.enqueueUpdate = enqueueUpdate
+exports.isSameFunction = isSameFunction

@@ -9,6 +9,8 @@ export const loader = () => {
   return json({ message: 'hello from loader!' })
 }
 
+export const meta = () => [{ title: 'Blah' }]
+
 // React components must be named functions for React Fast Refresh to work
 // named arrow functions are fine too, but not anonymous functions
 export default function Blah() {

@@ -275,7 +275,10 @@ export let revive: () => Plugin[] = () => {
       name: 'revive',
       config: (config) => {
         userConfig = config
-        return { appType: 'custom' }
+        return {
+          appType: 'custom',
+          experimental: { hmrPartialAccept: true },
+        }
       },
       async configResolved(viteConfig) {
         await initEsModuleLexer
