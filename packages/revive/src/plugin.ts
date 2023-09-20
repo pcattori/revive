@@ -24,12 +24,11 @@ import { getStylesForUrl, isCssModulesFile } from './styles.js'
 import * as VirtualModule from './vmod.js'
 import { removeExports } from './remove-exports.js'
 import { transformLegacyCssImports } from './legacy-css-imports.js'
-import { replaceImportSpecifier } from './replace-import-specifier.js'
+import * as HMR from './hmr.js'
 
 export let serverEntryId = VirtualModule.id('server-entry')
 let serverManifestId = VirtualModule.id('server-manifest')
 let browserManifestId = VirtualModule.id('browser-manifest')
-let remixReactProxyId = VirtualModule.id('remix-react-proxy')
 
 const normalizePath = (p: string) => {
   let unixPath = p.replace(/[\\/]+/g, '/').replace(/^([a-zA-Z]+:|\.\/)/, '')
@@ -437,46 +436,7 @@ export let revive: () => Plugin[] = () => {
         }
       },
     },
-    {
-      name: 'revive-remix-react-proxy',
-      enforce: 'post', // Ensure we're operating on the transformed code to support MDX etc.
-      resolveId(id) {
-        if (id === remixReactProxyId) {
-          return VirtualModule.resolve(remixReactProxyId)
-        }
-      },
-      transform(code, id) {
-        // Don't transform the proxy itself, otherwise it will import itself
-        if (id === VirtualModule.resolve(remixReactProxyId)) {
-          return
-        }
-
-        // Don't transform files that don't need the proxy
-        if (
-          !code.includes('@remix-run/react') &&
-          !code.includes('LiveReload')
-        ) {
-          return
-        }
-
-        // Rewrite imports to use the proxy
-        return replaceImportSpecifier({
-          code,
-          specifier: '@remix-run/react',
-          replaceWith: remixReactProxyId,
-        })
-      },
-      load(id) {
-        if (id === VirtualModule.resolve(remixReactProxyId)) {
-          return [
-            // LiveReload contents are coupled to the compiler in @remix-run/dev
-            // so we replace it with a no-op component to prevent errors.
-            'export * from "@remix-run/react";',
-            'export const LiveReload = () => null;',
-          ].join('\n')
-        }
-      },
-    },
+    ...HMR.plugins,
   ]
 }
 
