@@ -3,10 +3,16 @@ import { createRequire } from 'node:module'
 import * as path from 'node:path'
 
 import babel from '@babel/core'
-import { type Plugin } from 'vite'
+import { ViteDevServer, type Plugin } from 'vite'
+import { RemixConfig, readConfig } from '@remix-run/dev/dist/config.js'
 
 import * as VirtualModule from './vmod.js'
 import { replaceImportSpecifier } from './replace-import-specifier.js'
+import {
+  getRouteModuleExports,
+  resolveFsUrl,
+  resolveRelativeRouteFilePath,
+} from './utils.js'
 
 const _require = createRequire(import.meta.url)
 
@@ -21,7 +27,9 @@ const runtimeFilePath = path.join(
 let remixReactProxyId = VirtualModule.id('remix-react-proxy')
 let hmrRuntimeId = VirtualModule.id('hmr-runtime')
 
-export const plugins: Plugin[] = [
+export const plugins = (refs: {
+  viteChildCompiler: ViteDevServer | null
+}): Plugin[] => [
   {
     name: 'revive-hmr-livereload',
     enforce: 'post', // Ensure we're operating on the transformed code to support MDX etc.
@@ -84,6 +92,43 @@ export const plugins: Plugin[] = [
         'export default exports',
       ].join('\n')
     },
+    async handleHotUpdate({ server, file, modules }) {
+      let config = await readConfig()
+      if (!file.startsWith(config.appDirectory)) return
+      let routePath = path.relative(config.appDirectory, file)
+      let route = Object.values(config.routes).find((r) => r.file === routePath)
+      if (!route) return modules
+
+      const sourceExports = await getRouteModuleExports(
+        refs.viteChildCompiler,
+        config,
+        route.file
+      )
+
+      let info = {
+        id: route.id,
+        parentId: route.parentId,
+        path: route.path,
+        index: route.index,
+        caseSensitive: route.caseSensitive,
+        module: `${resolveFsUrl(
+          resolveRelativeRouteFilePath(route, config)
+        )}?import`, // Ensure the Vite dev server responds with a JS module
+        hasAction: sourceExports.includes('action'),
+        hasLoader: sourceExports.includes('loader'),
+        hasErrorBoundary: sourceExports.includes('ErrorBoundary'),
+        imports: [],
+      }
+
+      server.ws.send({
+        type: 'custom',
+        event: 'revive:hmr',
+        data: {
+          route: info,
+        },
+      })
+      return modules
+    },
   },
   {
     name: 'revive-react-refresh-babel',
@@ -116,18 +161,27 @@ export const plugins: Plugin[] = [
       code = result.code!
       const refreshContentRE = /\$Refresh(?:Reg|Sig)\$\(/
       if (refreshContentRE.test(code)) {
-        code = addRefreshWrapper(code, id)
+        code = await addRefreshWrapper(code, id)
       }
       return { code, map: result.map }
     },
   },
 ]
 
-function addRefreshWrapper(code: string, id: string): string {
+function isRoute(config: RemixConfig, id: string): boolean {
+  if (!id.startsWith(config.appDirectory)) return false
+  let routePath = path.relative(config.appDirectory, id)
+  let route = Object.values(config.routes).find((r) => r.file === routePath)
+  return route !== undefined
+}
+
+async function addRefreshWrapper(code: string, id: string): Promise<string> {
+  let config = await readConfig()
+  let footer = isRoute(config, id) ? FOOTER : NON_ROUTE_FOOTER
   return (
     HEADER.replace('__SOURCE__', JSON.stringify(id)) +
     code +
-    FOOTER.replace('__SOURCE__', JSON.stringify(id))
+    footer.replace('__SOURCE__', JSON.stringify(id))
   )
 }
 
@@ -154,9 +208,21 @@ if (import.meta.hot && !inWebWorker) {
   window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
 }`.replace(/\n+/g, '')
 
+const FOOTER = `
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh(__SOURCE__, currentExports);
+    // TODO: dynamically accept component exports
+    import.meta.hot.acceptExports(["default", "headers", "links", "meta"]);
+  });
+}`
+
 // TODO: use acceptExports for component exports in non-route files
 // handle Remix exports (meta,links,headers) only for route files
-const FOOTER = `
+const NON_ROUTE_FOOTER = `
 if (import.meta.hot && !inWebWorker) {
   window.$RefreshReg$ = prevRefreshReg;
   window.$RefreshSig$ = prevRefreshSig;

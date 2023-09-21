@@ -267,8 +267,13 @@ export let revive: () => Plugin[] = () => {
     | { isSsrBuild: false }
     | { isSsrBuild: true; getManifest: () => Promise<Manifest> }
 
-  let viteChildCompiler: ViteDevServer | null = null
   let userConfig: ViteUserConfig
+
+  let refs: {
+    viteChildCompiler: ViteDevServer | null
+  } = {
+    viteChildCompiler: null,
+  }
 
   return [
     {
@@ -285,7 +290,7 @@ export let revive: () => Plugin[] = () => {
 
         command = viteConfig.command
 
-        viteChildCompiler = await createViteDevServer({
+        refs.viteChildCompiler = await createViteDevServer({
           ...userConfig,
           plugins: [
             ...(userConfig.plugins ?? [])
@@ -307,14 +312,14 @@ export let revive: () => Plugin[] = () => {
           ],
           configFile: false,
         })
-        await viteChildCompiler.pluginContainer.buildStart({})
+        await refs.viteChildCompiler.pluginContainer.buildStart({})
 
         ssrBuildContext =
           viteConfig.build.ssr && command === 'build'
             ? {
                 isSsrBuild: true,
                 getManifest: async () =>
-                  await createBuildManifest(viteChildCompiler),
+                  await createBuildManifest(refs.viteChildCompiler),
               }
             : { isSsrBuild: false }
       },
@@ -363,7 +368,7 @@ export let revive: () => Plugin[] = () => {
         }
       },
       async buildEnd() {
-        await viteChildCompiler?.close()
+        await refs.viteChildCompiler?.close()
       },
     },
     {
@@ -381,7 +386,7 @@ export let revive: () => Plugin[] = () => {
           case VirtualModule.resolve(serverManifestId): {
             const manifest = ssrBuildContext.isSsrBuild
               ? await ssrBuildContext.getManifest()
-              : await getDevManifest(viteChildCompiler)
+              : await getDevManifest(refs.viteChildCompiler)
 
             return `export default ${jsesc(manifest, { es6: true })};`
           }
@@ -390,7 +395,7 @@ export let revive: () => Plugin[] = () => {
               throw new Error('This module only exists in development')
             }
 
-            const manifest = await getDevManifest(viteChildCompiler)
+            const manifest = await getDevManifest(refs.viteChildCompiler)
 
             return `window.__remixManifest=${jsesc(manifest, { es6: true })};`
           }
@@ -425,7 +430,7 @@ export let revive: () => Plugin[] = () => {
         if (!route) return
 
         const routeExports = await getRouteModuleExports(
-          viteChildCompiler,
+          refs.viteChildCompiler,
           config,
           route.file
         )
@@ -439,7 +444,7 @@ export let revive: () => Plugin[] = () => {
         }
       },
     },
-    ...HMR.plugins,
+    ...HMR.plugins(refs),
   ]
 }
 

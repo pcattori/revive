@@ -44,6 +44,48 @@ function isSameFunction(a, b) {
   )
 }
 
+import.meta.hot.on('revive:hmr', async ({ route }) => {
+  let imported = await __hmr_import(route.module + `?t=${Date.now()}`)
+  let routeModule = {
+    ...imported,
+    // react-refresh takes care of updating these in-place,
+    // if we don't preserve existing values we'll loose state.
+    default: imported.default
+      ? window.__remixRouteModules[route.id]?.default ?? imported.default
+      : imported.default,
+    ErrorBoundary: imported.ErrorBoundary
+      ? window.__remixRouteModules[route.id]?.ErrorBoundary ??
+        imported.ErrorBoundary
+      : imported.ErrorBoundary,
+  }
+  window.__remixRouteModules[route.id] = routeModule
+
+  let manifest = JSON.parse(JSON.stringify(__remixManifest))
+  manifest[route.id] = route
+
+  let routes = __remixRouter.createRoutesForHMR(
+    new Set([route.id]),
+    manifest.routes,
+    window.__remixRouteModules,
+    window.__remixContext.future
+  )
+  __remixRouter._internalSetRoutes(routes)
+
+  let unsub = __remixRouter.subscribe((state) => {
+    if (state.revalidation === 'idle') {
+      unsub()
+      // Ensure RouterProvider setState has flushed before re-rendering
+      setTimeout(() => {
+        Object.assign(window.__remixManifest, manifest)
+        console.log('REFRESH!')
+        exports.performReactRefresh()
+      }, 1)
+    }
+  })
+  window.__remixRevalidation = (window.__remixRevalidation || 0) + 1
+  __remixRouter.revalidate()
+})
+
 exports.__hmr_import = __hmr_import
 exports.registerExportsForReactRefresh = registerExportsForReactRefresh
 exports.enqueueUpdate = enqueueUpdate

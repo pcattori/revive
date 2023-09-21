@@ -5,6 +5,9 @@ import remarkRemixMdxFrontmatter from 'remark-remix-mdx-frontmatter'
 import { revive } from 'revive'
 
 export default defineConfig({
+  optimizeDeps: {
+    exclude: ['@remix-run/react'],
+  },
   plugins: [
     revive(),
     mdx({
