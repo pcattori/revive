@@ -7,7 +7,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "dev": "pnpm build --watch",
-    "build": "tsup --format esm src/cli.ts src/index.ts",
+    "build": "tsup",
     "cli": "ts-node src/cli.ts"
   },
   "dependencies": {
