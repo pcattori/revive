@@ -1,0 +1,19 @@
+diff --git a/dist/client/client.mjs b/dist/client/client.mjs
+index 889e61ce639c49b13a6ffb4f0c554806745d547f..7cb6729a547fa6b952687121b96d8929c315c829 100644
+--- a/dist/client/client.mjs
++++ b/dist/client/client.mjs
+@@ -678,8 +678,12 @@ function injectQuery(url, queryToInject) {
+     }
+     // can't use pathname from URL since it may be relative like ../
+     const pathname = url.replace(/#.*$/, '').replace(/\?.*$/, '');
+-    const { search, hash } = new URL(url, 'http://vitejs.dev');
+-    return `${pathname}?${queryToInject}${search ? `&` + search.slice(1) : ''}${hash || ''}`;
++    const { search, searchParams, hash } = new URL(url, 'http://vitejs.dev');
++    return searchParams.get(queryToInject) === ''
++        ? `${pathname}${search}${hash || ''}`
++        : `${pathname}?${queryToInject}${search ? `&` + search.slice(1) : ''}${
++            hash || ''
++        }`;
+ }
+ 
+ export { ErrorOverlay, createHotContext, injectQuery, removeStyle, updateStyle };
