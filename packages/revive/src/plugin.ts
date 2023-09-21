@@ -32,7 +32,7 @@ const normalizePath = (p: string) => {
   return viteNormalizePath(unixPath)
 }
 
-const resolveFSPath = (filePath: string) => `/@fs${normalizePath(filePath)}`
+const resolveFsUrl = (filePath: string) => `/@fs${normalizePath(filePath)}`
 
 type Route = RemixConfig['routes'][string]
 const resolveRelativeRouteFilePath = (route: Route, config: RemixConfig) => {
@@ -45,13 +45,13 @@ const resolveRelativeRouteFilePath = (route: Route, config: RemixConfig) => {
 const getServerEntry = (config: RemixConfig) => {
   return `
   import * as entryServer from ${JSON.stringify(
-    resolveFSPath(path.resolve(config.appDirectory, config.entryServerFile))
+    resolveFsUrl(path.resolve(config.appDirectory, config.entryServerFile))
   )};
   ${Object.keys(config.routes)
     .map((key, index) => {
       const route = config.routes[key]!
       return `import * as route${index} from ${JSON.stringify(
-        resolveFSPath(resolveRelativeRouteFilePath(route, config))
+        resolveFsUrl(resolveRelativeRouteFilePath(route, config))
       )};`
     })
     .join('\n')}
@@ -120,24 +120,45 @@ const getRouteModuleExports = async (
   viteChildCompiler: ViteDevServer | null,
   config: RemixConfig,
   routeFile: string
-) => {
+): Promise<string[]> => {
   if (!viteChildCompiler) {
-    throw new Error('viteChildCompiler is undefined')
+    throw new Error('Vite child compiler not found')
   }
+
   const routePath = path.join(config.appDirectory, routeFile)
 
-  // TODO: Use transformRequest and parse the generated code instead of using
-  // ssrLoadModule to avoid eval'ing the module? It would be very surprising to
-  // see my app code being executed as part of the Vite build process.
-  // const moduleSource = (
-  //   await viteChildCompiler?.transformRequest(
-  //     `/@fs${routePath.split(path.sep).join('/')}`,
-  //     { ssr: true }
-  //   )
-  // )?.code
+  // Get the compiled route module code from the Vite child compiler so that we
+  // can parse the exports from non-JS files like MDX. This ensures that we can
+  // understand the exports from anything that Vite can compile to JS, not just
+  // the route file formats that the Remix compiler historically supported.
+  const compiledRouteModuleCode = (
+    await viteChildCompiler.transformRequest(resolveFsUrl(routePath), {
+      ssr: true,
+    })
+  )?.code
 
-  const routeModule = await viteChildCompiler?.ssrLoadModule(routePath)
-  return Object.keys(routeModule)
+  if (!compiledRouteModuleCode) {
+    throw new Error(`No route module code found for ${routePath}`)
+  }
+
+  // Match `Object.defineProperty(__vite_ssr_exports__, "loader", ...)`
+  const exportsDefinePropertyMatches =
+    compiledRouteModuleCode.match(
+      /(?<=Object\.defineProperty\(__vite_ssr_exports__,\s*['"])(\w+)(?=['"])/g
+    ) ?? []
+
+  // Match `__vite_ssr_exports__.default = ...`
+  const exportsAssignmentMatches =
+    compiledRouteModuleCode.match(
+      /(?<=__vite_ssr_exports__\.)(\w+)(?=\s*=\s*[^=])/g
+    ) ?? []
+
+  const routeModuleExports = [
+    ...exportsDefinePropertyMatches,
+    ...exportsAssignmentMatches,
+  ]
+
+  return routeModuleExports
 }
 
 const createBuildManifest = async (
@@ -216,7 +237,7 @@ const getDevManifest = async (
       path: route.path,
       index: route.index,
       caseSensitive: route.caseSensitive,
-      module: `${resolveFSPath(
+      module: `${resolveFsUrl(
         resolveRelativeRouteFilePath(route, config)
       )}?import`, // Ensure the Vite dev server responds with a JS module
       hasAction: sourceExports.includes('action'),
@@ -230,7 +251,7 @@ const getDevManifest = async (
     version: String(Math.random()),
     url: VirtualModule.url(browserManifestId),
     entry: {
-      module: resolveFSPath(
+      module: resolveFsUrl(
         path.resolve(config.appDirectory, config.entryClientFile)
       ),
       imports: [],
