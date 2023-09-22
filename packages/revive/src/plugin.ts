@@ -34,6 +34,8 @@ const normalizePath = (p: string) => {
 
 const resolveFsUrl = (filePath: string) => `/@fs${normalizePath(filePath)}`
 
+const isJsFile = (filePath: string) => /\.[cm]?[jt]sx?$/i.test(filePath)
+
 type Route = RemixConfig['routes'][string]
 const resolveRelativeRouteFilePath = (route: Route, config: RemixConfig) => {
   const file = route.file
@@ -237,9 +239,9 @@ const getDevManifest = async (
       path: route.path,
       index: route.index,
       caseSensitive: route.caseSensitive,
-      module: `${resolveFsUrl(
-        resolveRelativeRouteFilePath(route, config)
-      )}?import`, // Ensure the Vite dev server responds with a JS module
+      module: `${resolveFsUrl(resolveRelativeRouteFilePath(route, config))}${
+        isJsFile(route.file) ? '' : '?import' // Ensure the Vite dev server responds with a JS module
+      }`,
       hasAction: sourceExports.includes('action'),
       hasLoader: sourceExports.includes('loader'),
       hasErrorBoundary: sourceExports.includes('ErrorBoundary'),
@@ -453,7 +455,7 @@ export let revive: () => Plugin[] = () => {
         // ignore routes without browser exports
         if (browserExports.length === 0) return
 
-        const result = /\.[cm]?[jt]sx?$/.test(id)
+        const result = isJsFile(id)
           ? filterExports(id, code, browserExports).code
           : code // TODO: Filter exports from non-JS route files like MDX?
 
