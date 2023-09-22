@@ -1,6 +1,11 @@
 {
   "private": true,
   "scripts": {
+    "dev": "pnpm --recursive --parallel run dev",
+    "dev:remix": "pnpm --filter \"express-app\" run dev:remix",
+    "build": "pnpm --recursive --filter \"./packages/**\" run build && pnpm --recursive --filter \"./apps/**\" run build",
+    "build:remix": "pnpm --recursive --filter \"./apps/**\" run build:remix",
+    "serve": "pnpm --filter \"express-app\" run serve",
     "preinstall": "npx only-allow pnpm"
   },
   "devDependencies": {

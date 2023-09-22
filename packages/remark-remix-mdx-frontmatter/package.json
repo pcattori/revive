@@ -1,0 +1,23 @@
+{
+  "private": true,
+  "name": "remark-remix-mdx-frontmatter",
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "dev": "pnpm build --watch",
+    "build": "tsup"
+  },
+  "dependencies": {
+    "@types/estree": "^1.0.1",
+    "@types/mdast": "^3.0.0",
+    "estree-util-value-to-estree": "^3.0.0",
+    "toml": "^3.0.0",
+    "unified": "^10.0.0",
+    "yaml": "^2.0.0"
+  },
+  "devDependencies": {
+    "mdast-util-mdx": "^2.0.0",
+    "tsup": "^7.1.0"
+  }
+}

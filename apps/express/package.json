@@ -1,4 +1,5 @@
 {
+  "name": "express-app",
   "private": true,
   "type": "module",
   "scripts": {
@@ -31,6 +32,8 @@
     "@types/react": "^18.2.14",
     "@types/react-dom": "^18.2.6",
     "chokidar": "^3.5.3",
+    "remark-frontmatter": "^5.0.0",
+    "remark-remix-mdx-frontmatter": "workspace:*",
     "revive": "workspace:*",
     "vite": "^4.3.9"
   }
