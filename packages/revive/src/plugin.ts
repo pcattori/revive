@@ -467,7 +467,7 @@ export let revive: () => Plugin[] = () => {
     },
     {
       name: 'revive-remix-react-proxy',
-      enforce: 'pre',
+      enforce: 'post', // Ensure we're operating on the transformed code to support MDX etc.
       resolveId(id) {
         if (id === remixReactProxyId) {
           return VirtualModule.resolve(remixReactProxyId)

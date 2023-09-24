@@ -11,10 +11,7 @@ export const replaceImportSpecifier = ({
   specifier: string
   replaceWith: string
 }) => {
-  const ast = parse(code, {
-    sourceType: 'module',
-    plugins: ['typescript', 'jsx'],
-  })
+  const ast = parse(code, { sourceType: 'module' })
 
   traverse.default(ast, {
     ImportDeclaration(path) {

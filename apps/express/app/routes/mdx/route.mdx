@@ -3,8 +3,21 @@ meta:
   - title: Hello from MDX
 ---
 
+import { json } from '@remix-run/node'
+import { useLoaderData } from '@remix-run/react'
+
+export const loader = () => {
+  return json({ message: 'This is loader data.' })
+}
+
 export const Component = () => {
-  return <p>This is a React component in a Markdown file.</p>
+  const loaderData = useLoaderData()
+  return (
+    <>
+      <p>This is a React component in a Markdown file.</p>
+      <p>{loaderData.message}</p>
+    </>
+  )
 }
 
 # {attributes.meta[0].title}
