@@ -18,7 +18,7 @@ import jsesc from 'jsesc'
 import { createRequestHandler } from './node/adapter.js'
 import { getStylesForUrl, isCssModulesFile } from './styles.js'
 import * as VirtualModule from './vmod.js'
-import { filterExports } from './filter-exports.js'
+import { removeExports } from './remove-exports.js'
 import { transformLegacyCssImports } from './legacy-css-imports.js'
 import { replaceImportSpecifier } from './replace-import-specifier.js'
 
@@ -421,13 +421,21 @@ export let revive: () => Plugin[] = () => {
       },
     },
     {
-      name: 'revive-browser-filter',
+      name: 'revive-empty-server-modules',
       enforce: 'pre',
+      async transform(_code, id, options) {
+        if (!options?.ssr && /\.server(\.[cm]?[jt]sx?)?$/.test(id))
+          return {
+            code: 'export default {}',
+            map: null,
+          }
+      },
+    },
+    {
+      name: 'revive-remove-server-exports',
+      enforce: 'post', // Ensure we're operating on the transformed code to support MDX etc.
       async transform(code, id, options) {
         if (options?.ssr) return
-
-        // ignore server files
-        if (/\.server(\.[jt]sx?)?$/.test(id)) return 'export default {}'
 
         let config = await readConfig()
 
@@ -448,19 +456,8 @@ export let revive: () => Plugin[] = () => {
         // ignore routes without component
         if (!routeExports.includes('default')) return
 
-        let browserExports = routeExports.filter(
-          (x) => !['loader', 'action'].includes(x)
-        )
-
-        // ignore routes without browser exports
-        if (browserExports.length === 0) return
-
-        const result = isJsFile(id)
-          ? filterExports(id, code, browserExports).code
-          : code // TODO: Filter exports from non-JS route files like MDX?
-
         return {
-          code: result,
+          code: removeExports(code, ['loader', 'action', 'headers']),
           map: null,
         }
       },
