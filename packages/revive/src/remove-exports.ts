@@ -93,18 +93,6 @@ export const removeExports = (source: string, exportsToRemove: string[]) => {
   }
 
   traverse.default(document, {
-    // Remove server file import statements. We're happy to just leave
-    // references to anything imported in the code, since they'll be removed if
-    // they're in server code, and if not, it'll just be an error.
-    ImportDeclaration: (path) => {
-      if (
-        path.node.source.value.endsWith('.server') ||
-        /\.server\.[cm]?[jt]sx?(\?|$)/.test(path.node.source.value)
-      ) {
-        path.remove()
-      }
-    },
-
     VariableDeclarator(variablePath) {
       if (variablePath.node.id.type === 'Identifier') {
         const local = variablePath.get('id') as NodePath<BabelTypes.Identifier>
