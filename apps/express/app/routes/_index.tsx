@@ -1,4 +1,8 @@
-import type { MetaFunction } from '@remix-run/node'
+import type { HeadersFunction, MetaFunction } from '@remix-run/node'
+
+export const headers: HeadersFunction = () => ({
+  'X-Custom-Header': 'hello',
+})
 
 export const meta: MetaFunction = () => {
   return [
