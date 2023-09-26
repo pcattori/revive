@@ -1,6 +1,4 @@
-import { parse } from '@babel/parser'
-import generate from '@babel/generator'
-import traverse from '@babel/traverse'
+import { parse, traverse, generate } from './babel.js'
 
 export const replaceImportSpecifier = ({
   code,
@@ -13,7 +11,7 @@ export const replaceImportSpecifier = ({
 }) => {
   const ast = parse(code, { sourceType: 'module' })
 
-  traverse.default(ast, {
+  traverse(ast, {
     ImportDeclaration(path) {
       if (path.node.source.value === specifier) {
         path.node.source.value = replaceWith
@@ -22,7 +20,7 @@ export const replaceImportSpecifier = ({
   })
 
   return {
-    code: generate.default(ast, { retainLines: true }).code,
+    code: generate(ast, { retainLines: true }).code,
     map: null,
   }
 }

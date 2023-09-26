@@ -1,11 +1,6 @@
 // Adapted from https://github.com/egoist/babel-plugin-eliminator/blob/d29859396b7708b7f7abbacdd951cbbc80902f00/src/index.ts
 // Which was originally adapted from https://github.com/vercel/next.js/blob/574fe0b582d5cc1b13663121fd47a3d82deaaa17/packages/next/build/babel/plugins/next-ssg-transform.ts
-import { parse } from '@babel/parser'
-import generate from '@babel/generator'
-import traverse from '@babel/traverse'
-import * as t from '@babel/types'
-import type { NodePath } from '@babel/traverse'
-import type { types as BabelTypes } from '@babel/core'
+import { parse, traverse, generate, BabelTypes, NodePath, t } from './babel.js'
 
 function getIdentifier(
   path: NodePath<
@@ -61,7 +56,7 @@ function isIdentifierReferenced(
 
 export const removeExports = (source: string, exportsToRemove: string[]) => {
   const document = parse(source, { sourceType: 'module' })
-  const generateCode = () => generate.default(document).code
+  const generateCode = () => generate(document).code
 
   const referencedIdentifiers = new Set<NodePath<BabelTypes.Identifier>>()
   const removedExports = new Set<string>()
@@ -92,7 +87,7 @@ export const removeExports = (source: string, exportsToRemove: string[]) => {
     }
   }
 
-  traverse.default(document, {
+  traverse(document, {
     VariableDeclarator(variablePath) {
       if (variablePath.node.id.type === 'Identifier') {
         const local = variablePath.get('id') as NodePath<BabelTypes.Identifier>
@@ -180,10 +175,7 @@ export const removeExports = (source: string, exportsToRemove: string[]) => {
         declaration.declarations = declaration.declarations.filter(
           (declarator: BabelTypes.VariableDeclarator) => {
             for (const name of exportsToRemove) {
-              if (
-                (declarator.id as BabelTypes.Identifier).name === name &&
-                declarator.init?.type.includes('Function') // ArrowFunctionExpression or FunctionExpression
-              ) {
+              if ((declarator.id as BabelTypes.Identifier).name === name) {
                 removedExports.add(name)
                 return false
               }
@@ -269,7 +261,7 @@ export const removeExports = (source: string, exportsToRemove: string[]) => {
   do {
     referencesRemovedInThisPass = 0
 
-    traverse.default(document, {
+    traverse(document, {
       Program(path) {
         path.scope.crawl()
       },

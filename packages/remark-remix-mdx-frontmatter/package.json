@@ -18,6 +18,6 @@
   },
   "devDependencies": {
     "mdast-util-mdx": "^2.0.0",
-    "tsup": "^7.1.0"
+    "tsup": "^7.2.0"
   }
 }

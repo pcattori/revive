@@ -1,7 +1,4 @@
-import { parse } from '@babel/parser'
-import generate from '@babel/generator'
-import traverse from '@babel/traverse'
-import { isImportDefaultSpecifier } from '@babel/types'
+import { parse, traverse, generate, t } from './babel.js'
 
 export const transformLegacyCssImports = (source: string) => {
   const ast = parse(source, {
@@ -9,7 +6,7 @@ export const transformLegacyCssImports = (source: string) => {
     plugins: ['typescript', 'jsx'],
   })
 
-  traverse.default(ast, {
+  traverse(ast, {
     // Handle `import styles from "./styles.css"`
     ImportDeclaration(path) {
       if (
@@ -17,7 +14,7 @@ export const transformLegacyCssImports = (source: string) => {
         // CSS Modules are bundled in the Remix compiler so they're already
         // compatible with Vite's default CSS handling
         !path.node.source.value.endsWith('.module.css') &&
-        isImportDefaultSpecifier(path.node.specifiers[0])
+        t.isImportDefaultSpecifier(path.node.specifiers[0])
       ) {
         path.node.source.value += '?url'
       }
@@ -25,7 +22,7 @@ export const transformLegacyCssImports = (source: string) => {
   })
 
   return {
-    code: generate.default(ast, { retainLines: true }).code,
+    code: generate(ast, { retainLines: true }).code,
     map: null,
   }
 }
