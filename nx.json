@@ -10,9 +10,6 @@
   "targetDefaults": {
     "build": {
       "dependsOn": ["^build"]
-    },
-    "build:remix": {
-      "dependsOn": ["^build"]
     }
   }
 }
