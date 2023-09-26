@@ -36,5 +36,15 @@
     "remark-remix-mdx-frontmatter": "workspace:*",
     "revive": "workspace:*",
     "vite": "^4.3.9"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "outputs": [
+          "{projectRoot}/build",
+          "{projectRoot}/public/build"
+        ]
+      }
+    }
   }
 }

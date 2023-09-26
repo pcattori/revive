@@ -1,17 +1,18 @@
 {
   "private": true,
   "scripts": {
-    "dev": "pnpm --recursive --parallel run dev",
-    "dev:remix": "pnpm --filter \"express-app\" run dev:remix",
-    "test": "pnpm --recursive run test",
+    "dev": "pnpm build && pnpm --recursive --parallel run dev",
+    "dev:remix": "pnpm build:remix && pnpm --filter \"express-app\" run dev:remix",
+    "test": "nx run-many --target test",
     "test:dev": "pnpm --recursive --parallel run test:dev",
-    "build": "pnpm --recursive --filter \"./packages/**\" run build && pnpm --recursive --filter \"./apps/**\" run build",
-    "build:remix": "pnpm --recursive --filter \"./apps/**\" run build:remix",
+    "build": "nx run-many --target build",
+    "build:remix": "nx run-many --target build:remix",
     "serve": "pnpm --filter \"express-app\" run serve",
     "preinstall": "npx only-allow pnpm"
   },
   "devDependencies": {
     "@types/node": "^20.3.2",
+    "nx": "^16.9.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6"
   },
