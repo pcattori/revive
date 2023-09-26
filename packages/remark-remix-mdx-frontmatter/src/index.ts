@@ -21,7 +21,7 @@ const remarkRemixMdxFrontmatter: Plugin<
     ...parsers,
   }
 
-  return (rootNode: Root) => {
+  return (rootNode, { basename = '' }) => {
     let attributes: unknown
 
     const node = rootNode.children.find(({ type }) =>
@@ -40,41 +40,6 @@ const remarkRemixMdxFrontmatter: Plugin<
         exportName in attributes
       )
     })
-
-    const exportFromAttributes = (
-      exportName: string
-    ): ExportNamedDeclaration => {
-      return {
-        type: 'ExportNamedDeclaration',
-        specifiers: [],
-        declaration: {
-          type: 'VariableDeclaration',
-          kind: 'const',
-          declarations: [
-            {
-              type: 'VariableDeclarator',
-              id: {
-                type: 'Identifier',
-                name: exportName,
-              },
-              init: {
-                type: 'MemberExpression',
-                optional: false,
-                computed: false,
-                object: {
-                  type: 'Identifier',
-                  name: 'attributes',
-                },
-                property: {
-                  type: 'Identifier',
-                  name: exportName,
-                },
-              },
-            },
-          ],
-        },
-      }
-    }
 
     rootNode.children.unshift({
       type: 'mdxjsEsm',
@@ -102,7 +67,60 @@ const remarkRemixMdxFrontmatter: Plugin<
                 ],
               },
             },
-            ...remixExports.map((name) => exportFromAttributes(name)),
+            {
+              type: 'ExportNamedDeclaration',
+              specifiers: [],
+              declaration: {
+                type: 'VariableDeclaration',
+                kind: 'const',
+                declarations: [
+                  {
+                    type: 'VariableDeclarator',
+                    id: {
+                      type: 'Identifier',
+                      name: 'filename',
+                    },
+                    init: {
+                      type: 'Literal',
+                      value: basename,
+                      raw: JSON.stringify(basename),
+                    },
+                  },
+                ],
+              },
+            },
+            ...remixExports.map(
+              (exportName: string): ExportNamedDeclaration => ({
+                type: 'ExportNamedDeclaration',
+                specifiers: [],
+                declaration: {
+                  type: 'VariableDeclaration',
+                  kind: 'const',
+                  declarations: [
+                    {
+                      type: 'VariableDeclarator',
+                      id: {
+                        type: 'Identifier',
+                        name: exportName,
+                      },
+                      init: {
+                        type: 'MemberExpression',
+                        optional: false,
+                        computed: false,
+                        object: {
+                          type: 'Identifier',
+                          name: 'attributes',
+                        },
+                        property: {
+                          type: 'Identifier',
+                          name: exportName,
+                        },
+                      },
+                    },
+                  ],
+                },
+              })
+            ),
           ],
         },
       },

@@ -1,6 +1,10 @@
 ---
 meta:
-  - title: Hello from MDX
+  - title: MDX Route
+  - name: description
+    content: This is an MDX Route!
+headers:
+  X-Custom-Header: This came from frontmatter!
 ---
 
 import { json } from '@remix-run/node'
@@ -14,7 +18,7 @@ export const Component = () => {
   const loaderData = useLoaderData()
   return (
     <>
-      <p>This is a React component in a Markdown file.</p>
+      <p>This is a React component in an MDX route file.</p>
       <p>{loaderData.message}</p>
     </>
   )
@@ -22,6 +26,6 @@ export const Component = () => {
 
 # {attributes.meta[0].title}
 
-This is a Markdown file.
+This is an MDX route file.
 
 <Component />

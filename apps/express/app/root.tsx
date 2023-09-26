@@ -55,7 +55,10 @@ export default function App() {
             <Link to="/blah">Blah</Link>
           </li>
           <li>
-            <Link to="/mdx">MDX</Link>
+            <Link to="/mdx-route">MDX Route</Link>
+          </li>
+          <li>
+            <Link to="/mdx-component">MDX Component</Link>
           </li>
         </ul>
 
