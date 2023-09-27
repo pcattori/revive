@@ -1,8 +1,8 @@
 import { defineConfig } from 'tsup'
 
-export default defineConfig({
+export default defineConfig((options) => ({
   format: ['esm'],
   entry: ['src/cli.ts', 'src/index.ts'],
   clean: true,
-  dts: true,
-})
+  dts: !options.watch, // Enabling this in watch mode crashes the build when saving files, not sure why
+}))
