@@ -2,11 +2,14 @@
   "private": true,
   "scripts": {
     "dev": "pnpm build:packages && pnpm --recursive --parallel run dev",
+    "dev:packages": "pnpm build:packages && pnpm --recursive --parallel --filter \"./packages/**\" run dev",
+    "dev:app": "nx run express-app:dev",
     "dev:remix": "nx run express-app:dev:remix",
     "test": "nx run-many --target test",
     "test:dev": "pnpm --recursive --parallel run test:dev",
     "build": "nx run-many --target build",
     "build:packages": "nx run-many --target build --exclude *-app",
+    "build:app": "nx run express-app:build",
     "build:remix": "nx run express-app:build:remix",
     "serve": "nx run express-app:serve",
     "preinstall": "npx only-allow pnpm"
