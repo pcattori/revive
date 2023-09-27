@@ -365,15 +365,6 @@ export let revive: () => Plugin[] = () => {
       },
     },
     {
-      name: 'revive-config',
-      enforce: 'pre',
-      config: () => ({
-        define: {
-          'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
-        },
-      }),
-    },
-    {
       name: 'revive-virtual-modules',
       enforce: 'pre',
       resolveId(id) {
