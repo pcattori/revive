@@ -8,13 +8,14 @@ import { valueToEstree } from 'estree-util-value-to-estree'
 type FrontmatterParsers = Record<string, (value: string) => unknown>
 
 export interface RemarkRemixMdxFrontmatterOptions {
+  exportName?: string
   parsers?: FrontmatterParsers
 }
 
-const remarkRemixMdxFrontmatter: Plugin<
+export const remarkRemixMdxFrontmatter: Plugin<
   [RemarkRemixMdxFrontmatterOptions?],
   Root
-> = ({ parsers } = {}) => {
+> = ({ exportName: frontmatterExportName = 'attributes', parsers } = {}) => {
   const allParsers: FrontmatterParsers = {
     yaml: parseYaml,
     toml: parseToml,
@@ -22,7 +23,7 @@ const remarkRemixMdxFrontmatter: Plugin<
   }
 
   return (rootNode, { basename = '' }) => {
-    let attributes: unknown
+    let frontmatter: unknown
 
     const node = rootNode.children.find(({ type }) =>
       Object.hasOwnProperty.call(allParsers, type)
@@ -30,16 +31,13 @@ const remarkRemixMdxFrontmatter: Plugin<
 
     if (node) {
       const parser = allParsers[node.type]
-      attributes = parser((node as Literal).value)
+      frontmatter = parser((node as Literal).value)
     }
 
-    const remixExports = ['headers', 'meta', 'handle'].filter((exportName) => {
-      return (
-        typeof attributes === 'object' &&
-        attributes !== null &&
-        exportName in attributes
-      )
-    })
+    const frontmatterHasKey = (key: string): boolean =>
+      typeof frontmatter === 'object' &&
+      frontmatter !== null &&
+      key in frontmatter
 
     rootNode.children.unshift({
       type: 'mdxjsEsm',
@@ -60,37 +58,15 @@ const remarkRemixMdxFrontmatter: Plugin<
                     type: 'VariableDeclarator',
                     id: {
                       type: 'Identifier',
-                      name: 'attributes',
+                      name: frontmatterExportName,
                     },
-                    init: valueToEstree(attributes),
+                    init: valueToEstree(frontmatter),
                   },
                 ],
               },
             },
-            {
-              type: 'ExportNamedDeclaration',
-              specifiers: [],
-              declaration: {
-                type: 'VariableDeclaration',
-                kind: 'const',
-                declarations: [
-                  {
-                    type: 'VariableDeclarator',
-                    id: {
-                      type: 'Identifier',
-                      name: 'filename',
-                    },
-                    init: {
-                      type: 'Literal',
-                      value: basename,
-                      raw: JSON.stringify(basename),
-                    },
-                  },
-                ],
-              },
-            },
-            ...remixExports.map(
-              (exportName: string): ExportNamedDeclaration => ({
+            ...['headers', 'meta', 'handle'].filter(frontmatterHasKey).map(
+              (remixExportName: string): ExportNamedDeclaration => ({
                 type: 'ExportNamedDeclaration',
                 specifiers: [],
                 declaration: {
@@ -101,7 +77,7 @@ const remarkRemixMdxFrontmatter: Plugin<
                       type: 'VariableDeclarator',
                       id: {
                         type: 'Identifier',
-                        name: exportName,
+                        name: remixExportName,
                       },
                       init: {
                         type: 'MemberExpression',
@@ -109,11 +85,11 @@ const remarkRemixMdxFrontmatter: Plugin<
                         computed: false,
                         object: {
                           type: 'Identifier',
-                          name: 'attributes',
+                          name: frontmatterExportName,
                         },
                         property: {
                           type: 'Identifier',
-                          name: exportName,
+                          name: remixExportName,
                         },
                       },
                     },

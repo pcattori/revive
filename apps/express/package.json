@@ -33,6 +33,7 @@
     "@types/react-dom": "^18.2.6",
     "chokidar": "^3.5.3",
     "remark-frontmatter": "^5.0.0",
+    "remark-mdx-filename": "workspace:*",
     "remark-remix-mdx-frontmatter": "workspace:*",
     "revive": "workspace:*",
     "vite": "^4.3.9"
