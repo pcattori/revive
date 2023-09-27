@@ -342,22 +342,6 @@ export let revive: () => Plugin[] = () => {
                 vite.ssrLoadModule(serverEntryId) as Promise<ServerBuild>,
               ])
 
-              // Allow critical CSS to be served to apps in another process
-              if (url?.startsWith('/_critical.css?pathname=')) {
-                const pathname = url.split('?pathname=')[1]
-                res.setHeader('Content-Type', 'text/css')
-                res.end(
-                  await getStylesForUrl(
-                    vite,
-                    config,
-                    cssModulesManifest,
-                    build,
-                    pathname
-                  )
-                )
-                return
-              }
-
               const handle = createRequestHandler(build, {
                 mode: 'development',
                 criticalStyles: await getStylesForUrl(
