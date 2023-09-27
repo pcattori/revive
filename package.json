@@ -1,6 +1,7 @@
 {
   "private": true,
   "scripts": {
+    "start": "pnpm dev",
     "dev": "pnpm build:packages && pnpm --recursive --parallel run dev",
     "dev:packages": "pnpm build:packages && pnpm --recursive --parallel --filter \"./packages/**\" run dev",
     "dev:app": "nx run express-app:dev",
