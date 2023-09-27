@@ -9,11 +9,11 @@
     "build": "tsup"
   },
   "dependencies": {
-    "@types/mdast": "^4.0.0",
-    "unified": "^11.0.3"
+    "@types/mdast": "^3.0.0",
+    "unified": "^10.0.0"
   },
   "devDependencies": {
-    "mdast-util-mdx": "^3.0.0",
+    "mdast-util-mdx": "^2.0.0",
     "tsup": "^7.2.0"
   }
 }

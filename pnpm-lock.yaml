@@ -20,17 +20,17 @@ importers:
   .:
     devDependencies:
       '@types/node':
-        specifier: ^20.3.2
-        version: 20.3.2
+        specifier: ^20.7.0
+        version: 20.7.0
       nx:
         specifier: ^16.9.1
         version: 16.9.1
       ts-node:
         specifier: ^10.9.1
-        version: 10.9.1(@types/node@20.3.2)(typescript@5.1.6)
+        version: 10.9.1(@types/node@20.7.0)(typescript@5.2.2)
       typescript:
-        specifier: ^5.1.6
-        version: 5.1.6
+        specifier: ^5.2.2
+        version: 5.2.2
 
   apps/express:
     dependencies:
@@ -39,19 +39,19 @@ importers:
         version: 2.0.0-pre.11
       '@remix-run/dev':
         specifier: 2.0.0-pre.11
-        version: 2.0.0-pre.11(@remix-run/serve@2.0.0-pre.11)(@types/node@20.3.2)(ts-node@10.9.1)(typescript@5.1.6)
+        version: 2.0.0-pre.11(@remix-run/serve@2.0.0-pre.11)(@types/node@20.7.0)(ts-node@10.9.1)(typescript@5.2.2)
       '@remix-run/express':
         specifier: 2.0.0-pre.11
-        version: 2.0.0-pre.11(express@4.18.2)(typescript@5.1.6)
+        version: 2.0.0-pre.11(express@4.18.2)(typescript@5.2.2)
       '@remix-run/node':
         specifier: 2.0.0-pre.11
-        version: 2.0.0-pre.11(typescript@5.1.6)
+        version: 2.0.0-pre.11(typescript@5.2.2)
       '@remix-run/react':
         specifier: 2.0.0-pre.11
-        version: 2.0.0-pre.11(patch_hash=gquuggvfxo3rcwecuayra66ese)(react-dom@18.2.0)(react@18.2.0)(typescript@5.1.6)
+        version: 2.0.0-pre.11(patch_hash=gquuggvfxo3rcwecuayra66ese)(react-dom@18.2.0)(react@18.2.0)(typescript@5.2.2)
       '@remix-run/serve':
         specifier: 2.0.0-pre.11
-        version: 2.0.0-pre.11(typescript@5.1.6)
+        version: 2.0.0-pre.11(typescript@5.2.2)
       compression:
         specifier: ^1.7.4
         version: 1.7.4
@@ -106,23 +106,23 @@ importers:
         version: link:../../packages/revive
       vite:
         specifier: ^4.3.9
-        version: 4.3.9(patch_hash=47mwpxdgdql67pglxuqsrwt7yy)(@types/node@20.3.2)
+        version: 4.3.9(patch_hash=47mwpxdgdql67pglxuqsrwt7yy)(@types/node@20.7.0)
 
   packages/remark-mdx-filename:
     dependencies:
       '@types/mdast':
-        specifier: ^4.0.0
-        version: 4.0.0
+        specifier: ^3.0.0
+        version: 3.0.11
       unified:
-        specifier: ^11.0.3
-        version: 11.0.3
+        specifier: ^10.0.0
+        version: 10.1.2
     devDependencies:
       mdast-util-mdx:
-        specifier: ^3.0.0
-        version: 3.0.0
+        specifier: ^2.0.0
+        version: 2.0.1
       tsup:
         specifier: ^7.2.0
-        version: 7.2.0(ts-node@10.9.1)(typescript@5.1.6)
+        version: 7.2.0(ts-node@10.9.1)(typescript@5.2.2)
 
   packages/remark-remix-mdx-frontmatter:
     dependencies:
@@ -130,8 +130,8 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
       '@types/mdast':
-        specifier: ^4.0.0
-        version: 4.0.0
+        specifier: ^3.0.0
+        version: 3.0.11
       estree-util-value-to-estree:
         specifier: ^3.0.1
         version: 3.0.1
@@ -139,18 +139,18 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       unified:
-        specifier: ^11.0.3
-        version: 11.0.3
+        specifier: ^10.0.0
+        version: 10.1.2
       yaml:
         specifier: ^2.0.0
         version: 2.3.1
     devDependencies:
       mdast-util-mdx:
-        specifier: ^3.0.0
-        version: 3.0.0
+        specifier: ^2.0.0
+        version: 2.0.1
       tsup:
         specifier: ^7.2.0
-        version: 7.2.0(ts-node@10.9.1)(typescript@5.1.6)
+        version: 7.2.0(ts-node@10.9.1)(typescript@5.2.2)
 
   packages/revive:
     dependencies:
@@ -171,16 +171,16 @@ importers:
         version: 7.22.5
       '@remix-run/dev':
         specifier: 2.0.0-pre.11
-        version: 2.0.0-pre.11(@remix-run/serve@2.0.0-pre.11)(@types/node@20.3.2)(ts-node@10.9.1)(typescript@5.1.6)
+        version: 2.0.0-pre.11(@remix-run/serve@2.0.0-pre.11)(@types/node@20.7.0)(ts-node@10.9.1)(typescript@5.2.2)
       '@remix-run/node':
         specifier: 2.0.0-pre.11
-        version: 2.0.0-pre.11(typescript@5.1.6)
+        version: 2.0.0-pre.11(typescript@5.2.2)
       '@remix-run/router':
         specifier: ^1.8.0
         version: 1.8.0
       '@remix-run/server-runtime':
         specifier: 2.0.0-pre.11
-        version: 2.0.0-pre.11(patch_hash=z5ohtq5abcll6jmzqnabzuluia)(typescript@5.1.6)
+        version: 2.0.0-pre.11(patch_hash=z5ohtq5abcll6jmzqnabzuluia)(typescript@5.2.2)
       commander:
         specifier: ^11.0.0
         version: 11.0.0
@@ -217,10 +217,10 @@ importers:
         version: 2.4.2
       tsup:
         specifier: ^7.2.0
-        version: 7.2.0(ts-node@10.9.1)(typescript@5.1.6)
+        version: 7.2.0(ts-node@10.9.1)(typescript@5.2.2)
       vite:
         specifier: ^4.3.9
-        version: 4.3.9(patch_hash=47mwpxdgdql67pglxuqsrwt7yy)(@types/node@20.3.2)
+        version: 4.3.9(patch_hash=47mwpxdgdql67pglxuqsrwt7yy)(@types/node@20.7.0)
       vitest:
         specifier: ^0.34.5
         version: 0.34.5
@@ -1465,7 +1465,7 @@ packages:
     engines: {node: '>=18.0.0'}
     dev: false
 
-  /@remix-run/dev@2.0.0-pre.11(@remix-run/serve@2.0.0-pre.11)(@types/node@20.3.2)(ts-node@10.9.1)(typescript@5.1.6):
+  /@remix-run/dev@2.0.0-pre.11(@remix-run/serve@2.0.0-pre.11)(@types/node@20.7.0)(ts-node@10.9.1)(typescript@5.2.2):
     resolution: {integrity: sha512-uBPgXD+ML3gDCtEe0oD/y1Ri9v+D3GjGkYDgbY2q+C91gJwT3RTcg726iDEorTIBFD8eqKuRP2SRVjZZU0V/wA==}
     engines: {node: '>=18.0.0'}
     hasBin: true
@@ -1487,10 +1487,10 @@ packages:
       '@babel/traverse': 7.22.8
       '@mdx-js/mdx': 2.3.0
       '@npmcli/package-json': 4.0.1
-      '@remix-run/serve': 2.0.0-pre.11(typescript@5.1.6)
-      '@remix-run/server-runtime': 2.0.0-pre.11(patch_hash=z5ohtq5abcll6jmzqnabzuluia)(typescript@5.1.6)
+      '@remix-run/serve': 2.0.0-pre.11(typescript@5.2.2)
+      '@remix-run/server-runtime': 2.0.0-pre.11(patch_hash=z5ohtq5abcll6jmzqnabzuluia)(typescript@5.2.2)
       '@types/mdx': 2.0.7
-      '@vanilla-extract/integration': 6.2.1(@types/node@20.3.2)
+      '@vanilla-extract/integration': 6.2.1(@types/node@20.7.0)
       arg: 5.0.2
       cacache: 17.1.4
       chalk: 4.1.2
@@ -1526,7 +1526,7 @@ packages:
       semver: 7.5.3
       tar-fs: 2.1.1
       tsconfig-paths: 4.2.0
-      typescript: 5.1.6
+      typescript: 5.2.2
       ws: 7.5.9
     transitivePeerDependencies:
       - '@types/node'
@@ -1543,7 +1543,7 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@remix-run/express@2.0.0-pre.11(express@4.18.2)(typescript@5.1.6):
+  /@remix-run/express@2.0.0-pre.11(express@4.18.2)(typescript@5.2.2):
     resolution: {integrity: sha512-uFVePDaX1mgHq1/JeUeKRKmItqDNDcqmzYSCjEadGigohQeqqzHcLCzF49YRM5em9j3bdDk0qqfcVdOS9d6/xg==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
@@ -1553,12 +1553,12 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@remix-run/node': 2.0.0-pre.11(typescript@5.1.6)
+      '@remix-run/node': 2.0.0-pre.11(typescript@5.2.2)
       express: 4.18.2
-      typescript: 5.1.6
+      typescript: 5.2.2
     dev: false
 
-  /@remix-run/node@2.0.0-pre.11(typescript@5.1.6):
+  /@remix-run/node@2.0.0-pre.11(typescript@5.2.2):
     resolution: {integrity: sha512-q7LKUbv+y73aNshDMMsxPcYSHGUz7wImZNYIvsCeav4yEW3ats3OwnZ7MNwrUR8a7fvwZLxuksQlA0psYFTKWg==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
@@ -1567,7 +1567,7 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@remix-run/server-runtime': 2.0.0-pre.11(patch_hash=z5ohtq5abcll6jmzqnabzuluia)(typescript@5.1.6)
+      '@remix-run/server-runtime': 2.0.0-pre.11(patch_hash=z5ohtq5abcll6jmzqnabzuluia)(typescript@5.2.2)
       '@remix-run/web-fetch': 4.4.0-pre.0
       '@remix-run/web-file': 3.1.0-pre.0
       '@remix-run/web-stream': 1.1.0-pre.0
@@ -1575,10 +1575,10 @@ packages:
       cookie-signature: 1.2.1
       source-map-support: 0.5.21
       stream-slice: 0.1.2
-      typescript: 5.1.6
+      typescript: 5.2.2
     dev: false
 
-  /@remix-run/react@2.0.0-pre.11(patch_hash=gquuggvfxo3rcwecuayra66ese)(react-dom@18.2.0)(react@18.2.0)(typescript@5.1.6):
+  /@remix-run/react@2.0.0-pre.11(patch_hash=gquuggvfxo3rcwecuayra66ese)(react-dom@18.2.0)(react@18.2.0)(typescript@5.2.2):
     resolution: {integrity: sha512-HkiK5kD36krr1r6eY1ojqUqqe/qPvtsHgnVsIwli6pCUIjN3lqGb0CCugUcJhqiHfb+bXBdTqMsaHxglwTkTzw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
@@ -1590,11 +1590,11 @@ packages:
         optional: true
     dependencies:
       '@remix-run/router': 1.9.0-pre.2
-      '@remix-run/server-runtime': 2.0.0-pre.11(patch_hash=z5ohtq5abcll6jmzqnabzuluia)(typescript@5.1.6)
+      '@remix-run/server-runtime': 2.0.0-pre.11(patch_hash=z5ohtq5abcll6jmzqnabzuluia)(typescript@5.2.2)
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
       react-router-dom: 6.16.0-pre.2(react-dom@18.2.0)(react@18.2.0)
-      typescript: 5.1.6
+      typescript: 5.2.2
     dev: false
     patched: true
 
@@ -1608,13 +1608,13 @@ packages:
     engines: {node: '>=14.0.0'}
     dev: false
 
-  /@remix-run/serve@2.0.0-pre.11(typescript@5.1.6):
+  /@remix-run/serve@2.0.0-pre.11(typescript@5.2.2):
     resolution: {integrity: sha512-etL+hLei+HLEnGFP7N73wIHAx2D57EeDwPUlpGbVsKDS8x3RLawY37nGw9NDIPoMsFBqB03UvsWcymAyg9hxFg==}
     engines: {node: '>=18.0.0'}
     hasBin: true
     dependencies:
-      '@remix-run/express': 2.0.0-pre.11(express@4.18.2)(typescript@5.1.6)
-      '@remix-run/node': 2.0.0-pre.11(typescript@5.1.6)
+      '@remix-run/express': 2.0.0-pre.11(express@4.18.2)(typescript@5.2.2)
+      '@remix-run/node': 2.0.0-pre.11(typescript@5.2.2)
       chokidar: 3.5.3
       compression: 1.7.4
       express: 4.18.2
@@ -1626,7 +1626,7 @@ packages:
       - typescript
     dev: false
 
-  /@remix-run/server-runtime@2.0.0-pre.11(patch_hash=z5ohtq5abcll6jmzqnabzuluia)(typescript@5.1.6):
+  /@remix-run/server-runtime@2.0.0-pre.11(patch_hash=z5ohtq5abcll6jmzqnabzuluia)(typescript@5.2.2):
     resolution: {integrity: sha512-TH3BZyb3A6clz/U4ltouirMfbcSlv5UeaBbLBQUB4PmFw0QsC7N6GahVv2mkZoJvk1x0px9U3IWwUD7IusbuQQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
@@ -1642,7 +1642,7 @@ packages:
       set-cookie-parser: 2.6.0
       source-map: 0.7.4
       type-fest: 4.3.1
-      typescript: 5.1.6
+      typescript: 5.2.2
     dev: false
     patched: true
 
@@ -1780,12 +1780,6 @@ packages:
     dependencies:
       '@types/unist': 3.0.0
 
-  /@types/hast@3.0.1:
-    resolution: {integrity: sha512-hs/iBJx2aydugBQx5ETV3ZgeSS0oIreQrFJ4bjBl0XvM4wAmDjFEALY7p0rTSLt2eL+ibjRAAs9dTPiCLtmbqQ==}
-    dependencies:
-      '@types/unist': 3.0.0
-    dev: true
-
   /@types/jsesc@3.0.1:
     resolution: {integrity: sha512-F2g93pJlhV0RlW9uSUAM/hIxywlwlZcuRB/nZ82GaMPaO8mdexYbJ8Qt3UGbUS1M19YFQykEetrWW004M+vPCg==}
     dev: true
@@ -1799,6 +1793,7 @@ packages:
     resolution: {integrity: sha512-YLeG8CujC9adtj/kuDzq1N4tCDYKoZ5l/bnjq8d74+t/3q/tHquJOJKUQXJrLCflOHpKjXgcI/a929gpmLOEng==}
     dependencies:
       '@types/unist': 3.0.0
+    dev: true
 
   /@types/mdx@2.0.7:
     resolution: {integrity: sha512-BG4tyr+4amr3WsSEmHn/fXPqaCba/AYZ7dsaQTiavihQunHSIxk+uAtqsjvicNpyHN6cm+B9RVrUOtW9VzIKHw==}
@@ -1806,8 +1801,8 @@ packages:
   /@types/ms@0.7.31:
     resolution: {integrity: sha512-iiUgKzV9AuaEkZqkOLDIvlQiL6ltuZd9tGcW3gwpnX8JbuiuhFlEGmmFXEXkN50Cvq7Os88IY2v0dkDqXYWVgA==}
 
-  /@types/node@20.3.2:
-    resolution: {integrity: sha512-vOBLVQeCQfIcF/2Y7eKFTqrMnizK5lRNQ7ykML/5RuwVXVWxYkgwS7xbt4B6fKCUPgbSL5FSsjHQpaGQP/dQmw==}
+  /@types/node@20.7.0:
+    resolution: {integrity: sha512-zI22/pJW2wUZOVyguFaUL1HABdmSVxpXrzIqkjsHmyUjNhPoWM1CKfvVuXfetHhIok4RY573cqS0mZ1SJEnoTg==}
 
   /@types/prop-types@15.7.5:
     resolution: {integrity: sha512-JCB8C6SnDoQf0cNycqd/35A7MjcnK+ZTqE7judS6o7utxUCg6imJg3QK2qzHKszlTjcj2cn+NwMB2i96ubpj7w==}
@@ -1834,7 +1829,7 @@ packages:
   /@types/set-cookie-parser@2.4.2:
     resolution: {integrity: sha512-fBZgytwhYAUkj/jC/FAV4RQ5EerRup1YQsXQCh8rZfiHkc4UahC192oH0smGwsXol3cL3A5oETuAHeQHmhXM4w==}
     dependencies:
-      '@types/node': 20.3.2
+      '@types/node': 20.7.0
     dev: true
 
   /@types/unist@2.0.6:
@@ -1867,7 +1862,7 @@ packages:
       outdent: 0.8.0
     dev: false
 
-  /@vanilla-extract/integration@6.2.1(@types/node@20.3.2):
+  /@vanilla-extract/integration@6.2.1(@types/node@20.7.0):
     resolution: {integrity: sha512-+xYJz07G7TFAMZGrOqArOsURG+xcYvqctujEkANjw2McCBvGEK505RxQqOuNiA9Mi9hgGdNp2JedSa94f3eoLg==}
     dependencies:
       '@babel/core': 7.22.8
@@ -1881,8 +1876,8 @@ packages:
       lodash: 4.17.21
       mlly: 1.4.0
       outdent: 0.8.0
-      vite: 4.3.9(patch_hash=47mwpxdgdql67pglxuqsrwt7yy)(@types/node@20.3.2)
-      vite-node: 0.28.5(@types/node@20.3.2)
+      vite: 4.3.9(patch_hash=47mwpxdgdql67pglxuqsrwt7yy)(@types/node@20.7.0)
+      vite-node: 0.28.5(@types/node@20.7.0)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -1994,7 +1989,6 @@ packages:
     resolution: {integrity: sha512-F0SAmZ8iUtS//m8DmCTA0jlh6TDKkHQyK6xc6V4KDTyZKA9dnvX9/3sRTVQrWm79glUAZbnmmNcdYwUIHWVybw==}
     engines: {node: '>=0.4.0'}
     hasBin: true
-    dev: true
 
   /acorn@8.9.0:
     resolution: {integrity: sha512-jaVNAFBHNLXspO543WnNNPZFRtavh3skAkITqD0/2aeMkKZTN+254PyhwxFYrk3vQ1xfY+2wbesJMs/JC8/PwQ==}
@@ -2597,6 +2591,7 @@ packages:
     resolution: {integrity: sha512-RWmIqhcFf1lRYBvNmr7qTNuyCt/7/ns2jbpp1+PalgE/rDQcBT0fioSMUpJ93irlUhC5hrg4cYqe6U+0ImW0rA==}
     dependencies:
       dequal: 2.0.3
+    dev: true
 
   /diff-sequences@29.6.3:
     resolution: {integrity: sha512-EjePK1srD3P08o2j4f0ExnylqRs5B9tJjcp9t1krH2qRi8CCdsYfwe9JgSLurFBWwq4uOlipzfk5fHNvwFKr8Q==}
@@ -3164,7 +3159,7 @@ packages:
       fs.realpath: 1.0.0
       inflight: 1.0.6
       inherits: 2.0.4
-      minimatch: 3.1.2
+      minimatch: 3.0.5
       once: 1.4.0
       path-is-absolute: 1.0.1
     dev: true
@@ -3762,19 +3757,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /mdast-util-mdx-expression@2.0.0:
-    resolution: {integrity: sha512-fGCu8eWdKUKNu5mohVGkhBXCXGnOTLuFqOvGMvdikr+J1w7lDJgxThOKpwRWzzbyXAU2hhSwsmssOY4yTokluw==}
-    dependencies:
-      '@types/estree-jsx': 1.0.0
-      '@types/hast': 3.0.1
-      '@types/mdast': 4.0.0
-      devlop: 1.1.0
-      mdast-util-from-markdown: 2.0.0
-      mdast-util-to-markdown: 2.1.0
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
   /mdast-util-mdx-jsx@2.1.4:
     resolution: {integrity: sha512-DtMn9CmVhVzZx3f+optVDF8yFgQVt7FghCRNdlIaS3X5Bnym3hZwPbg/XW86vdpKjlc1PVj26SpnLGeJBXD3JA==}
     dependencies:
@@ -3793,26 +3775,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /mdast-util-mdx-jsx@3.0.0:
-    resolution: {integrity: sha512-XZuPPzQNBPAlaqsTTgRrcJnyFbSOBovSadFgbFu8SnuNgm+6Bdx1K+IWoitsmj6Lq6MNtI+ytOqwN70n//NaBA==}
-    dependencies:
-      '@types/estree-jsx': 1.0.0
-      '@types/hast': 3.0.1
-      '@types/mdast': 4.0.0
-      '@types/unist': 3.0.0
-      ccount: 2.0.1
-      devlop: 1.1.0
-      mdast-util-from-markdown: 2.0.0
-      mdast-util-to-markdown: 2.1.0
-      parse-entities: 4.0.1
-      stringify-entities: 4.0.3
-      unist-util-remove-position: 5.0.0
-      unist-util-stringify-position: 4.0.0
-      vfile-message: 4.0.2
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
   /mdast-util-mdx@2.0.1:
     resolution: {integrity: sha512-38w5y+r8nyKlGvNjSEqWrhG0w5PmnRA+wnBvm+ulYCct7nsGYhFVb0lljS9bQav4psDAS1eGkP2LMVcZBi/aqw==}
     dependencies:
@@ -3824,18 +3786,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /mdast-util-mdx@3.0.0:
-    resolution: {integrity: sha512-JfbYLAW7XnYTTbUsmpu0kdBUVe+yKVJZBItEjwyYJiDJuZ9w4eeaqks4HQO+R7objWgS2ymV60GYpI14Ug554w==}
-    dependencies:
-      mdast-util-from-markdown: 2.0.0
-      mdast-util-mdx-expression: 2.0.0
-      mdast-util-mdx-jsx: 3.0.0
-      mdast-util-mdxjs-esm: 2.0.1
-      mdast-util-to-markdown: 2.1.0
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
   /mdast-util-mdxjs-esm@1.3.1:
     resolution: {integrity: sha512-SXqglS0HrEvSdUEfoXFtcg7DRl7S2cwOXc7jkuusG472Mmjag34DUDeOJUZtl+BVnyeO1frIgVpHlNRWc2gk/w==}
     dependencies:
@@ -3846,19 +3796,6 @@ packages:
       mdast-util-to-markdown: 1.5.0
     transitivePeerDependencies:
       - supports-color
-
-  /mdast-util-mdxjs-esm@2.0.1:
-    resolution: {integrity: sha512-EcmOpxsZ96CvlP03NghtH1EsLtr0n9Tm4lPUJUBccV9RwUOneqSycg19n5HGzCf+10LozMRSObtVr3ee1WoHtg==}
-    dependencies:
-      '@types/estree-jsx': 1.0.0
-      '@types/hast': 3.0.1
-      '@types/mdast': 4.0.0
-      devlop: 1.1.0
-      mdast-util-from-markdown: 2.0.0
-      mdast-util-to-markdown: 2.1.0
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
 
   /mdast-util-phrasing@3.0.1:
     resolution: {integrity: sha512-WmI1gTXUBJo4/ZmSk79Wcb2HcjPJBzM1nlI/OUWA8yk2X9ik3ffNbBGsU+09BFmXaL1IBb9fiuvq6/KMiNycSg==}
@@ -4912,7 +4849,7 @@ packages:
     dependencies:
       lilconfig: 2.1.0
       postcss: 8.4.24
-      ts-node: 10.9.1(@types/node@20.3.2)(typescript@5.1.6)
+      ts-node: 10.9.1(@types/node@20.7.0)(typescript@5.2.2)
       yaml: 2.3.1
 
   /postcss-modules-extract-imports@3.0.0(postcss@8.4.24):
@@ -5281,7 +5218,7 @@ packages:
     resolution: {integrity: sha512-JZkJMZkAGFFPP2YqXZXPbMlMBgsxzE8ILs4lMIX/2o0L9UBw9O/Y3o6wFw/i9YLapcUJWwqbi3kdxIPdC62TIA==}
     hasBin: true
     dependencies:
-      glob: 7.1.6
+      glob: 7.1.4
     dev: true
 
   /rollup@3.25.3:
@@ -5724,7 +5661,7 @@ packages:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
     dev: true
 
-  /ts-node@10.9.1(@types/node@20.3.2)(typescript@5.1.6):
+  /ts-node@10.9.1(@types/node@20.7.0)(typescript@5.2.2):
     resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
     hasBin: true
     peerDependencies:
@@ -5743,14 +5680,14 @@ packages:
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 20.3.2
-      acorn: 8.9.0
+      '@types/node': 20.7.0
+      acorn: 8.10.0
       acorn-walk: 8.2.0
       arg: 4.1.3
       create-require: 1.1.1
       diff: 4.0.2
       make-error: 1.3.6
-      typescript: 5.1.6
+      typescript: 5.2.2
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
 
@@ -5766,7 +5703,7 @@ packages:
     resolution: {integrity: sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==}
     dev: true
 
-  /tsup@7.2.0(ts-node@10.9.1)(typescript@5.1.6):
+  /tsup@7.2.0(ts-node@10.9.1)(typescript@5.2.2):
     resolution: {integrity: sha512-vDHlczXbgUvY3rWvqFEbSqmC1L7woozbzngMqTtL2PGBODTtWlRwGDDawhvWzr5c1QjKe4OAKqJGfE1xeXUvtQ==}
     engines: {node: '>=16.14'}
     hasBin: true
@@ -5796,7 +5733,7 @@ packages:
       source-map: 0.8.0-beta.0
       sucrase: 3.32.0
       tree-kill: 1.2.2
-      typescript: 5.1.6
+      typescript: 5.2.2
     transitivePeerDependencies:
       - supports-color
       - ts-node
@@ -5820,8 +5757,8 @@ packages:
       mime-types: 2.1.35
     dev: false
 
-  /typescript@5.1.6:
-    resolution: {integrity: sha512-zaWCozRZ6DLEWAWFrVDz1H6FVXzUSfTy5FUMWsQlU8Ym5JP9eO4xkTIROFCQvhQf61z6O/G6ugw3SgAnvvm+HA==}
+  /typescript@5.2.2:
+    resolution: {integrity: sha512-mI4WrpHsbCIcwT9cF4FZvr80QUeKvsUsUvKDoR+X/7XHQH98xYD8YHZg7ANtz2GtZt/CBq2QJ0thkGJMHfqc1w==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -5856,6 +5793,7 @@ packages:
       is-plain-obj: 4.1.0
       trough: 2.1.0
       vfile: 6.0.1
+    dev: true
 
   /unique-filename@3.0.0:
     resolution: {integrity: sha512-afXhuC55wkAmZ0P18QsVE6kp8JaxrEokN2HGIoIVv2ijHQd419H0+6EigAFcIzXeMIkcIkNBpB3L/DXB3cTS/g==}
@@ -5901,13 +5839,6 @@ packages:
       '@types/unist': 2.0.6
       unist-util-visit: 4.1.2
 
-  /unist-util-remove-position@5.0.0:
-    resolution: {integrity: sha512-Hp5Kh3wLxv0PHj9m2yZhhLt58KzPtEYKQQ4yxfYFEO7EvHwzyDYnduhHnY1mDxoqr7VUwVuHXk9RXKIiYS1N8Q==}
-    dependencies:
-      '@types/unist': 3.0.0
-      unist-util-visit: 5.0.0
-    dev: true
-
   /unist-util-stringify-position@3.0.3:
     resolution: {integrity: sha512-k5GzIBZ/QatR8N5X2y+drfpWG8IDBzdnVj6OInRNWm1oXrzydiaAT2OQiA8DPRRZyAKb9b6I2a6PxYklZD0gKg==}
     dependencies:
@@ -5917,6 +5848,7 @@ packages:
     resolution: {integrity: sha512-0ASV06AAoKCDkS2+xw5RXJywruurpbC4JZSm7nr7MOt1ojAzvyyaO+UxZf18j8FCF6kmzCZKcAgN/yu2gm2XgQ==}
     dependencies:
       '@types/unist': 3.0.0
+    dev: true
 
   /unist-util-visit-parents@5.1.3:
     resolution: {integrity: sha512-x6+y8g7wWMyQhL1iZfhIPhDAs7Xwbn9nRosDXl7qoPTSCy0yNxnKc+hWokFifWQIDGi154rdUqKvbCa4+1kLhg==}
@@ -6031,6 +5963,7 @@ packages:
     dependencies:
       '@types/unist': 3.0.0
       unist-util-stringify-position: 4.0.0
+    dev: true
 
   /vfile@5.3.7:
     resolution: {integrity: sha512-r7qlzkgErKjobAmyNIkkSpizsFPYiUPuJb5pNW1RB4JcYVZhs4lIbVqk8XPk033CV/1z8ss5pkax8SuhGpcG8g==}
@@ -6046,8 +5979,9 @@ packages:
       '@types/unist': 3.0.0
       unist-util-stringify-position: 4.0.0
       vfile-message: 4.0.2
+    dev: true
 
-  /vite-node@0.28.5(@types/node@20.3.2):
+  /vite-node@0.28.5(@types/node@20.7.0):
     resolution: {integrity: sha512-LmXb9saMGlrMZbXTvOveJKwMTBTNUH66c8rJnQ0ZPNX+myPEol64+szRzXtV5ORb0Hb/91yq+/D3oERoyAt6LA==}
     engines: {node: '>=v14.16.0'}
     hasBin: true
@@ -6059,7 +5993,7 @@ packages:
       picocolors: 1.0.0
       source-map: 0.6.1
       source-map-support: 0.5.21
-      vite: 4.3.9(patch_hash=47mwpxdgdql67pglxuqsrwt7yy)(@types/node@20.3.2)
+      vite: 4.3.9(patch_hash=47mwpxdgdql67pglxuqsrwt7yy)(@types/node@20.7.0)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -6070,7 +6004,7 @@ packages:
       - terser
     dev: false
 
-  /vite-node@0.34.5(@types/node@20.3.2):
+  /vite-node@0.34.5(@types/node@20.7.0):
     resolution: {integrity: sha512-RNZ+DwbCvDoI5CbCSQSyRyzDTfFvFauvMs6Yq4ObJROKlIKuat1KgSX/Ako5rlDMfVCyMcpMRMTkJBxd6z8YRA==}
     engines: {node: '>=v14.18.0'}
     hasBin: true
@@ -6080,7 +6014,7 @@ packages:
       mlly: 1.4.0
       pathe: 1.1.1
       picocolors: 1.0.0
-      vite: 4.3.9(patch_hash=47mwpxdgdql67pglxuqsrwt7yy)(@types/node@20.3.2)
+      vite: 4.3.9(patch_hash=47mwpxdgdql67pglxuqsrwt7yy)(@types/node@20.7.0)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -6091,7 +6025,7 @@ packages:
       - terser
     dev: true
 
-  /vite@4.3.9(patch_hash=47mwpxdgdql67pglxuqsrwt7yy)(@types/node@20.3.2):
+  /vite@4.3.9(patch_hash=47mwpxdgdql67pglxuqsrwt7yy)(@types/node@20.7.0):
     resolution: {integrity: sha512-qsTNZjO9NoJNW7KnOrgYwczm0WctJ8m/yqYAMAK9Lxt4SoySUfS5S8ia9K7JHpa3KEeMfyF8LoJ3c5NeBJy6pg==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
@@ -6116,7 +6050,7 @@ packages:
       terser:
         optional: true
     dependencies:
-      '@types/node': 20.3.2
+      '@types/node': 20.7.0
       esbuild: 0.17.19
       postcss: 8.4.24
       rollup: 3.25.3
@@ -6157,7 +6091,7 @@ packages:
     dependencies:
       '@types/chai': 4.3.6
       '@types/chai-subset': 1.3.3
-      '@types/node': 20.3.2
+      '@types/node': 20.7.0
       '@vitest/expect': 0.34.5
       '@vitest/runner': 0.34.5
       '@vitest/snapshot': 0.34.5
@@ -6176,8 +6110,8 @@ packages:
       strip-literal: 1.3.0
       tinybench: 2.5.1
       tinypool: 0.7.0
-      vite: 4.3.9(patch_hash=47mwpxdgdql67pglxuqsrwt7yy)(@types/node@20.3.2)
-      vite-node: 0.34.5(@types/node@20.3.2)
+      vite: 4.3.9(patch_hash=47mwpxdgdql67pglxuqsrwt7yy)(@types/node@20.7.0)
+      vite-node: 0.34.5(@types/node@20.7.0)
       why-is-node-running: 2.2.2
     transitivePeerDependencies:
       - less

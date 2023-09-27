@@ -5,10 +5,10 @@ export interface RemarkMdxFilenameOptions {
   exportName?: string
 }
 
-export const remarkMdxFilename: Plugin<[RemarkMdxFilenameOptions?], Root> = ({
+export const remarkMdxFilename: Plugin<[RemarkMdxFilenameOptions?], any> = ({
   exportName = 'filename',
 } = {}) => {
-  return (rootNode, { basename: filename = '' }) => {
+  return (rootNode: Root, { basename: filename = '' }) => {
     rootNode.children.unshift({
       type: 'mdxjsEsm',
       value: '',

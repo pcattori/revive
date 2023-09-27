@@ -14,7 +14,7 @@ export interface RemarkRemixMdxFrontmatterOptions {
 
 export const remarkRemixMdxFrontmatter: Plugin<
   [RemarkRemixMdxFrontmatterOptions?],
-  Root
+  any
 > = ({ exportName: frontmatterExportName = 'attributes', parsers } = {}) => {
   const allParsers: FrontmatterParsers = {
     yaml: parseYaml,
@@ -22,7 +22,7 @@ export const remarkRemixMdxFrontmatter: Plugin<
     ...parsers,
   }
 
-  return (rootNode, { basename = '' }) => {
+  return (rootNode: Root, { basename = '' }) => {
     let frontmatter: unknown
 
     const node = rootNode.children.find(({ type }) =>
