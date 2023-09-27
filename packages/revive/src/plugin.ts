@@ -13,6 +13,10 @@ import {
   ViteDevServer,
   UserConfig as ViteUserConfig,
 } from 'vite'
+import {
+  init as initEsModuleLexer,
+  parse as esModuleLexer,
+} from 'es-module-lexer'
 import jsesc from 'jsesc'
 
 import { createRequestHandler } from './node/adapter.js'
@@ -127,40 +131,34 @@ const getRouteModuleExports = async (
     throw new Error('Vite child compiler not found')
   }
 
-  const routePath = path.join(config.appDirectory, routeFile)
-
-  // Get the compiled route module code from the Vite child compiler so that we
+  // We transform the route module code with the Vite child compiler so that we
   // can parse the exports from non-JS files like MDX. This ensures that we can
   // understand the exports from anything that Vite can compile to JS, not just
   // the route file formats that the Remix compiler historically supported.
-  const compiledRouteModuleCode = (
-    await viteChildCompiler.transformRequest(resolveFsUrl(routePath), {
-      ssr: true,
-    })
-  )?.code
 
-  if (!compiledRouteModuleCode) {
-    throw new Error(`No route module code found for ${routePath}`)
+  const ssr = true
+  const { pluginContainer, moduleGraph } = viteChildCompiler
+  const routePath = path.join(config.appDirectory, routeFile)
+  const url = resolveFsUrl(routePath)
+
+  const resolveId = async () => {
+    const result = await pluginContainer.resolveId(url, undefined, { ssr })
+    if (!result) throw new Error(`Could not resolve module ID for ${url}`)
+    return result.id
   }
 
-  // Match `Object.defineProperty(__vite_ssr_exports__, "loader", ...)`
-  const exportsDefinePropertyMatches =
-    compiledRouteModuleCode.match(
-      /(?<=Object\.defineProperty\(__vite_ssr_exports__,\s*['"])(\w+)(?=['"])/g
-    ) ?? []
+  const [id, code] = await Promise.all([
+    resolveId(),
+    fs.readFile(routePath, 'utf-8'),
+    // pluginContainer.transform(...) fails if we don't do this first:
+    moduleGraph.ensureEntryFromUrl(url, ssr),
+  ])
 
-  // Match `__vite_ssr_exports__.default = ...`
-  const exportsAssignmentMatches =
-    compiledRouteModuleCode.match(
-      /(?<=__vite_ssr_exports__\.)(\w+)(?=\s*=\s*[^=])/g
-    ) ?? []
+  const transformed = await pluginContainer.transform(code, id, { ssr })
+  const [_imports, exports] = esModuleLexer(transformed.code)
+  const exportNames = exports.map((e) => e.n)
 
-  const routeModuleExports = [
-    ...exportsDefinePropertyMatches,
-    ...exportsAssignmentMatches,
-  ]
-
-  return routeModuleExports
+  return exportNames
 }
 
 const createBuildManifest = async (
@@ -281,6 +279,8 @@ export let revive: () => Plugin[] = () => {
         return { appType: 'custom' }
       },
       async configResolved(viteConfig) {
+        await initEsModuleLexer
+
         command = viteConfig.command
 
         viteChildCompiler = await createViteDevServer({
