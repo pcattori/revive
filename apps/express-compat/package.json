@@ -1,16 +1,22 @@
 {
-  "name": "express-app",
+  "name": "express-compat-app",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "revive dev",
+    "dev:remix": "remix dev --manual -c \"node server.js\"",
     "build": "revive build",
-    "serve": "node server.js"
+    "build:remix": "remix build",
+    "serve": "remix-serve build/index.js",
+    "serve:custom": "node server.js"
   },
   "dependencies": {
+    "@remix-run/css-bundle": "2.0.0-pre.11",
+    "@remix-run/dev": "2.0.0-pre.11",
     "@remix-run/express": "2.0.0-pre.11",
     "@remix-run/node": "2.0.0-pre.11",
     "@remix-run/react": "2.0.0-pre.11",
+    "@remix-run/serve": "2.0.0-pre.11",
     "compression": "^1.7.4",
     "express": "^4.18.2",
     "isbot": "^3.6.12",
@@ -27,6 +33,7 @@
     "@types/react-dom": "^18.2.6",
     "chokidar": "^3.5.3",
     "remark-frontmatter": "^5.0.0",
+    "remark-mdx-filename": "workspace:*",
     "remark-remix-mdx-frontmatter": "workspace:*",
     "revive": "workspace:*",
     "vite": "^4.3.9"

@@ -34,6 +34,70 @@ importers:
 
   apps/express:
     dependencies:
+      '@remix-run/express':
+        specifier: 2.0.0-pre.11
+        version: 2.0.0-pre.11(express@4.18.2)(typescript@5.2.2)
+      '@remix-run/node':
+        specifier: 2.0.0-pre.11
+        version: 2.0.0-pre.11(typescript@5.2.2)
+      '@remix-run/react':
+        specifier: 2.0.0-pre.11
+        version: 2.0.0-pre.11(patch_hash=gquuggvfxo3rcwecuayra66ese)(react-dom@18.2.0)(react@18.2.0)(typescript@5.2.2)
+      compression:
+        specifier: ^1.7.4
+        version: 1.7.4
+      express:
+        specifier: ^4.18.2
+        version: 4.18.2
+      isbot:
+        specifier: ^3.6.12
+        version: 3.6.12
+      morgan:
+        specifier: ^1.10.0
+        version: 1.10.0
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      source-map-support:
+        specifier: ^0.5.21
+        version: 0.5.21
+    devDependencies:
+      '@mdx-js/mdx':
+        specifier: ^2.3.0
+        version: 2.3.0
+      '@mdx-js/react':
+        specifier: ^2.3.0
+        version: 2.3.0(react@18.2.0)
+      '@mdx-js/rollup':
+        specifier: ^2.3.0
+        version: 2.3.0
+      '@types/react':
+        specifier: ^18.2.14
+        version: 18.2.14
+      '@types/react-dom':
+        specifier: ^18.2.6
+        version: 18.2.6
+      chokidar:
+        specifier: ^3.5.3
+        version: 3.5.3
+      remark-frontmatter:
+        specifier: ^5.0.0
+        version: 5.0.0
+      remark-remix-mdx-frontmatter:
+        specifier: workspace:*
+        version: link:../../packages/remark-remix-mdx-frontmatter
+      revive:
+        specifier: workspace:*
+        version: link:../../packages/revive
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(patch_hash=47mwpxdgdql67pglxuqsrwt7yy)(@types/node@20.7.0)
+
+  apps/express-compat:
+    dependencies:
       '@remix-run/css-bundle':
         specifier: 2.0.0-pre.11
         version: 2.0.0-pre.11
@@ -1977,12 +2041,12 @@ packages:
       negotiator: 0.6.3
     dev: false
 
-  /acorn-jsx@5.3.2(acorn@8.9.0):
+  /acorn-jsx@5.3.2(acorn@8.10.0):
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
     peerDependencies:
       acorn: ^6.0.0 || ^7.0.0 || ^8.0.0
     dependencies:
-      acorn: 8.9.0
+      acorn: 8.10.0
 
   /acorn-walk@8.2.0:
     resolution: {integrity: sha512-k+iyHEuPgSw6SbuDpGQM+06HQUa04DZ3o+F6CSzXMvvI5KMvnaEqXe+YVe555R9nn6GPt404fos4wcgpw12SDA==}
@@ -3999,8 +4063,8 @@ packages:
   /micromark-extension-mdxjs@1.0.1:
     resolution: {integrity: sha512-7YA7hF6i5eKOfFUzZ+0z6avRG52GpWR8DL+kN47y3f2KhxbBZMhmxe7auOeaTBrW2DenbbZTf1ea9tA2hDpC2Q==}
     dependencies:
-      acorn: 8.9.0
-      acorn-jsx: 5.3.2(acorn@8.9.0)
+      acorn: 8.10.0
+      acorn-jsx: 5.3.2(acorn@8.10.0)
       micromark-extension-mdx-expression: 1.0.8
       micromark-extension-mdx-jsx: 1.0.5
       micromark-extension-mdx-md: 1.0.1

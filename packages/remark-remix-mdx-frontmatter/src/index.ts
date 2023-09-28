@@ -15,7 +15,7 @@ export interface RemarkRemixMdxFrontmatterOptions {
 export const remarkRemixMdxFrontmatter: Plugin<
   [RemarkRemixMdxFrontmatterOptions?],
   any
-> = ({ exportName: frontmatterExportName = 'attributes', parsers } = {}) => {
+> = ({ exportName: frontmatterExportName = 'frontmatter', parsers } = {}) => {
   const allParsers: FrontmatterParsers = {
     yaml: parseYaml,
     toml: parseToml,
