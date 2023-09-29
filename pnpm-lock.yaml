@@ -1,7 +1,7 @@
 lockfileVersion: '6.0'
 
 settings:
-  autoInstallPeers: false
+  autoInstallPeers: true
   excludeLinksFromLockfile: false
 
 patchedDependencies:
@@ -73,7 +73,7 @@ importers:
         version: 2.3.0(react@18.2.0)
       '@mdx-js/rollup':
         specifier: ^2.3.0
-        version: 2.3.0
+        version: 2.3.0(rollup@3.25.3)
       '@types/react':
         specifier: ^18.2.14
         version: 18.2.14
@@ -146,7 +146,7 @@ importers:
         version: 2.3.0(react@18.2.0)
       '@mdx-js/rollup':
         specifier: ^2.3.0
-        version: 2.3.0
+        version: 2.3.0(rollup@3.25.3)
       '@types/react':
         specifier: ^18.2.14
         version: 18.2.14
@@ -186,7 +186,7 @@ importers:
         version: 2.0.1
       tsup:
         specifier: ^7.2.0
-        version: 7.2.0(ts-node@10.9.1)(typescript@5.2.2)
+        version: 7.2.0(postcss@8.4.24)(ts-node@10.9.1)(typescript@5.2.2)
 
   packages/remark-remix-mdx-frontmatter:
     dependencies:
@@ -214,7 +214,7 @@ importers:
         version: 2.0.1
       tsup:
         specifier: ^7.2.0
-        version: 7.2.0(ts-node@10.9.1)(typescript@5.2.2)
+        version: 7.2.0(postcss@8.4.24)(ts-node@10.9.1)(typescript@5.2.2)
 
   packages/revive:
     dependencies:
@@ -284,7 +284,7 @@ importers:
         version: 2.4.2
       tsup:
         specifier: ^7.2.0
-        version: 7.2.0(ts-node@10.9.1)(typescript@5.2.2)
+        version: 7.2.0(postcss@8.4.24)(ts-node@10.9.1)(typescript@5.2.2)
       vite:
         specifier: ^4.3.9
         version: 4.3.9(patch_hash=47mwpxdgdql67pglxuqsrwt7yy)(@types/node@20.7.0)
@@ -1325,13 +1325,14 @@ packages:
       react: 18.2.0
     dev: true
 
-  /@mdx-js/rollup@2.3.0:
+  /@mdx-js/rollup@2.3.0(rollup@3.25.3):
     resolution: {integrity: sha512-wLvRfJS/M4UmdqTd+WoaySEE7q4BIejYf1xAHXYvtT1du/1Tl/z2450Gg2+Hu7fh05KwRRiehiTP9Yc/Dtn0fA==}
     peerDependencies:
       rollup: '>=2'
     dependencies:
       '@mdx-js/mdx': 2.3.0
-      '@rollup/pluginutils': 5.0.4
+      '@rollup/pluginutils': 5.0.4(rollup@3.25.3)
+      rollup: 3.25.3
       source-map: 0.7.4
       vfile: 5.3.7
     transitivePeerDependencies:
@@ -1751,7 +1752,7 @@ packages:
       web-streams-polyfill: 3.2.1
     dev: false
 
-  /@rollup/pluginutils@5.0.4:
+  /@rollup/pluginutils@5.0.4(rollup@3.25.3):
     resolution: {integrity: sha512-0KJnIoRI8A+a1dqOYLxH8vBf8bphDmty5QvIm2hqm7oFCFYKCAZWWd2hXgMibaPsNDhI0AtpYfQZJG47pt/k4g==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
@@ -1763,6 +1764,7 @@ packages:
       '@types/estree': 1.0.2
       estree-walker: 2.0.2
       picomatch: 2.3.1
+      rollup: 3.25.3
     dev: true
 
   /@sinclair/typebox@0.27.8:
@@ -5774,7 +5776,7 @@ packages:
     resolution: {integrity: sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==}
     dev: true
 
-  /tsup@7.2.0(ts-node@10.9.1)(typescript@5.2.2):
+  /tsup@7.2.0(postcss@8.4.24)(ts-node@10.9.1)(typescript@5.2.2):
     resolution: {integrity: sha512-vDHlczXbgUvY3rWvqFEbSqmC1L7woozbzngMqTtL2PGBODTtWlRwGDDawhvWzr5c1QjKe4OAKqJGfE1xeXUvtQ==}
     engines: {node: '>=16.14'}
     hasBin: true
@@ -5798,6 +5800,7 @@ packages:
       execa: 5.1.1
       globby: 11.1.0
       joycon: 3.1.1
+      postcss: 8.4.24
       postcss-load-config: 4.0.1(postcss@8.4.24)(ts-node@10.9.1)
       resolve-from: 5.0.0
       rollup: 3.25.3
