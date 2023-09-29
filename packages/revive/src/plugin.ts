@@ -3,6 +3,7 @@ import { createRequire } from 'node:module'
 import * as path from 'node:path'
 import * as fs from 'node:fs/promises'
 
+import babel from '@babel/core'
 import { RemixConfig, readConfig } from '@remix-run/dev/dist/config.js'
 import { Manifest } from '@remix-run/dev/dist/manifest.js'
 import { ServerBuild } from '@remix-run/server-runtime'
@@ -561,7 +562,49 @@ export let revive: () => Plugin[] = () => {
         ].join('\n')
       },
     },
+    {
+      name: 'revive-react-refresh-babel',
+      // TODO: should `enforce` be `post` so that things like MDX get react-refresh/babel applied?
+      enforce: 'pre',
+      async transform(code, id, options) {
+        if (id.includes('/node_modules/')) return
+
+        const [filepath] = id.split('?')
+        if (!/.[tj]sx?$/.test(filepath)) return
+
+        const devRuntime = 'react/jsx-dev-runtime'
+        const ssr = options?.ssr === true
+        const isJSX = filepath.endsWith('x')
+        const useFastRefresh = !ssr && (isJSX || code.includes(devRuntime))
+        if (!useFastRefresh) return
+
+        const result = await babel.transformAsync(code, {
+          filename: id,
+          sourceFileName: filepath,
+          parserOpts: {
+            sourceType: 'module',
+            allowAwaitOutsideFunction: true,
+            plugins: ['jsx', 'typescript'],
+          },
+          plugins: ['react-refresh/babel'],
+          sourceMaps: true,
+        })
+        if (result === null) return
+
+        code = result.code!
+        const refreshContentRE = /\$Refresh(?:Reg|Sig)\$\(/
+        if (refreshContentRE.test(code)) {
+          code = addRefreshWrapper(code, id)
+        }
+        return { code, map: result.map }
+      },
+    },
   ]
+}
+
+function addRefreshWrapper(code: string, _id: string): string {
+  // TODO
+  return code
 }
 
 export let legacyRemixCssImportSemantics: () => Plugin[] = () => {
