@@ -26,7 +26,7 @@ import { removeExports } from './remove-exports.js'
 import { transformLegacyCssImports } from './legacy-css-imports.js'
 import { replaceImportSpecifier } from './replace-import-specifier.js'
 
-export let serverEntryId = VirtualModule.id('server-entry')
+let serverEntryId = VirtualModule.id('server-entry')
 let serverManifestId = VirtualModule.id('server-manifest')
 let browserManifestId = VirtualModule.id('browser-manifest')
 let remixReactProxyId = VirtualModule.id('remix-react-proxy')
@@ -261,7 +261,8 @@ const getDevManifest = async (
 }
 
 export let revive: () => Plugin[] = () => {
-  let command: ResolvedViteConfig['command']
+  let viteCommand: ResolvedViteConfig['command']
+  let viteUserConfig: ViteUserConfig
 
   let cssModulesManifest: Record<string, string> = {}
   let ssrBuildContext:
@@ -269,24 +270,65 @@ export let revive: () => Plugin[] = () => {
     | { isSsrBuild: true; getManifest: () => Promise<Manifest> }
 
   let viteChildCompiler: ViteDevServer | null = null
-  let userConfig: ViteUserConfig
 
   return [
     {
       name: 'revive',
-      config: (config) => {
-        userConfig = config
-        return { appType: 'custom' }
+      config: async (_viteUserConfig, viteConfigEnv) => {
+        viteUserConfig = _viteUserConfig
+        viteCommand = viteConfigEnv.command
+
+        const remixConfig = await readConfig()
+
+        return {
+          appType: 'custom',
+          ...(viteCommand === 'build' && {
+            base: remixConfig.publicPath,
+            build: {
+              ...viteUserConfig.build,
+              ...(!viteConfigEnv.ssrBuild
+                ? {
+                    manifest: true,
+                    outDir: remixConfig.assetsBuildDirectory,
+                    rollupOptions: {
+                      ...viteUserConfig.build?.rollupOptions,
+                      preserveEntrySignatures: 'exports-only',
+                      input: [
+                        path.resolve(
+                          remixConfig.appDirectory,
+                          remixConfig.entryClientFile
+                        ),
+                        ...Object.values(remixConfig.routes).map((route) =>
+                          path.resolve(remixConfig.appDirectory, route.file)
+                        ),
+                      ],
+                    },
+                  }
+                : {
+                    outDir: path.dirname(remixConfig.serverBuildPath),
+                    rollupOptions: {
+                      ...viteUserConfig.build?.rollupOptions,
+                      preserveEntrySignatures: 'exports-only',
+                      input: serverEntryId,
+                      output: {
+                        entryFileNames: path.basename(
+                          remixConfig.serverBuildPath
+                        ),
+                        format: remixConfig.serverModuleFormat,
+                      },
+                    },
+                  }),
+            },
+          }),
+        }
       },
       async configResolved(viteConfig) {
         await initEsModuleLexer
 
-        command = viteConfig.command
-
         viteChildCompiler = await createViteDevServer({
-          ...userConfig,
+          ...viteUserConfig,
           plugins: [
-            ...(userConfig.plugins ?? [])
+            ...(viteUserConfig.plugins ?? [])
               .flat()
               // Exclude this plugin from the child compiler to prevent an
               // infinite loop (plugin creates a child compiler with the same
@@ -308,7 +350,7 @@ export let revive: () => Plugin[] = () => {
         await viteChildCompiler.pluginContainer.buildStart({})
 
         ssrBuildContext =
-          viteConfig.build.ssr && command === 'build'
+          viteConfig.build.ssr && viteCommand === 'build'
             ? {
                 isSsrBuild: true,
                 getManifest: async () =>
@@ -384,7 +426,7 @@ export let revive: () => Plugin[] = () => {
             return `export default ${jsesc(manifest, { es6: true })};`
           }
           case VirtualModule.resolve(browserManifestId): {
-            if (command === 'build') {
+            if (viteCommand === 'build') {
               throw new Error('This module only exists in development')
             }
 
