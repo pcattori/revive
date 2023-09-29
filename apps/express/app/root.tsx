@@ -58,6 +58,8 @@ export default function App() {
           </li>
         </ul>
 
+        <input key="test-hmr-browser-state-preservation" />
+
         <Outlet />
         <h1>outlet end</h1>
         <ScrollRestoration />

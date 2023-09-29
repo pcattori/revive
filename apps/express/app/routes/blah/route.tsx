@@ -4,6 +4,8 @@ import { useLoaderData } from '@remix-run/react'
 import './styles.css'
 import styles from './styles.module.css'
 import doggo from './doggo.jpg'
+import { value } from './value'
+import { Component } from './component'
 
 export const loader = () => {
   return json({ message: 'hello from loader!' })
@@ -16,6 +18,8 @@ export default function Blah() {
   return (
     <div>
       <h1 className="blah_heading">{message}</h1>
+      <h2>{value}</h2>
+      <Component val={value} />
       <img
         src={doggo}
         className={styles.image}
