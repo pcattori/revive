@@ -350,6 +350,15 @@ export let revive: () => Plugin[] = () => {
                   'name' in plugin &&
                   plugin.name !== 'revive'
               ),
+            {
+              name: 'no-hmr',
+              handleHotUpdate() {
+                // parent vite server is already sending HMR updates
+                // do not send duplicate HMR updates from child server
+                // which log confusing "page reloaded" messages that aren't true
+                return []
+              },
+            },
           ],
           configFile: false,
         })
