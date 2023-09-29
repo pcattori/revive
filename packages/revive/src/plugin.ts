@@ -1,6 +1,8 @@
+import { BinaryLike, createHash } from 'node:crypto'
+import { createRequire } from 'node:module'
 import * as path from 'node:path'
 import * as fs from 'node:fs/promises'
-import { BinaryLike, createHash } from 'node:crypto'
+
 import { RemixConfig, readConfig } from '@remix-run/dev/dist/config.js'
 import { Manifest } from '@remix-run/dev/dist/manifest.js'
 import { ServerBuild } from '@remix-run/server-runtime'
@@ -30,6 +32,9 @@ let serverEntryId = VirtualModule.id('server-entry')
 let serverManifestId = VirtualModule.id('server-manifest')
 let browserManifestId = VirtualModule.id('browser-manifest')
 let remixReactProxyId = VirtualModule.id('remix-react-proxy')
+let hmrRuntimeId = VirtualModule.id('hmr-runtime')
+
+const _require = createRequire(import.meta.url)
 
 const normalizePath = (p: string) => {
   let unixPath = p.replace(/[\\/]+/g, '/').replace(/^([a-zA-Z]+:|\.\/)/, '')
@@ -510,13 +515,50 @@ export let revive: () => Plugin[] = () => {
       },
       load(id) {
         if (id === VirtualModule.resolve(remixReactProxyId)) {
+          // TODO: ensure react refresh is initialized before `<Scripts />`
           return [
-            // LiveReload contents are coupled to the compiler in @remix-run/dev
-            // so we replace it with a no-op component to prevent errors.
+            'import { createElement } from "react";',
             'export * from "@remix-run/react";',
-            'export const LiveReload = () => null;',
+            'export const LiveReload = process.env.NODE_ENV !== "development" ? () => null : ',
+            '() => createElement("script", {',
+            ' type: "module",',
+            ' suppressHydrationWarning: true,',
+            ' dangerouslySetInnerHTML: { __html: `',
+            `   import RefreshRuntime from "${VirtualModule.url(
+              hmrRuntimeId
+            )}"`,
+            '   RefreshRuntime.injectIntoGlobalHook(window)',
+            '   window.$RefreshReg$ = () => {}',
+            '   window.$RefreshSig$ = () => (type) => type',
+            '   window.__vite_plugin_react_preamble_installed__ = true',
+            ' `}',
+            '});',
           ].join('\n')
         }
+      },
+    },
+    {
+      name: 'revive-hmr-runtime',
+      enforce: 'pre',
+      resolveId(id) {
+        if (id === hmrRuntimeId) return VirtualModule.resolve(hmrRuntimeId)
+      },
+      async load(id) {
+        if (id !== VirtualModule.resolve(hmrRuntimeId)) return
+
+        const reactRefreshDir = path.dirname(
+          _require.resolve('react-refresh/package.json')
+        )
+        const reactRefreshRuntimePath = path.join(
+          reactRefreshDir,
+          'cjs/react-refresh-runtime.development.js'
+        )
+
+        return [
+          'const exports = {}',
+          await fs.readFile(reactRefreshRuntimePath, 'utf8'),
+          'export default exports',
+        ].join('\n')
       },
     },
   ]
