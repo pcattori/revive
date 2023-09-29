@@ -6,7 +6,7 @@
   "main": "./dist/index.js",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "dev": "pnpm build --watch",
+    "dev": "pnpm build --watch ./src",
     "test": "vitest run",
     "test:dev": "vitest dev",
     "build": "tsup",

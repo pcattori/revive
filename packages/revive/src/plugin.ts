@@ -558,6 +558,7 @@ export let revive: () => Plugin[] = () => {
         return [
           'const exports = {}',
           await fs.readFile(reactRefreshRuntimePath, 'utf8'),
+          await fs.readFile(_require.resolve('./refresh-utils.cjs'), 'utf8'),
           'export default exports',
         ].join('\n')
       },
@@ -602,10 +603,50 @@ export let revive: () => Plugin[] = () => {
   ]
 }
 
-function addRefreshWrapper(code: string, _id: string): string {
-  // TODO
-  return code
+function addRefreshWrapper(code: string, id: string): string {
+  return (
+    REACT_REFRESH_HEADER.replace('__SOURCE__', JSON.stringify(id)) +
+    code +
+    REACT_REFRESH_FOOTER.replace('__SOURCE__', JSON.stringify(id))
+  )
 }
+
+const REACT_REFRESH_HEADER = `
+import RefreshRuntime from "${hmrRuntimeId}";
+
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+
+if (import.meta.hot && !inWebWorker) {
+  if (!window.__vite_plugin_react_preamble_installed__) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong. " +
+      "See https://github.com/vitejs/vite-plugin-react/pull/11#discussion_r430879201"
+    );
+  }
+
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = (type, id) => {
+    RefreshRuntime.register(type, __SOURCE__ + " " + id)
+  };
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}`.replace(/\n+/g, '')
+
+const REACT_REFRESH_FOOTER = `
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh(__SOURCE__, currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate(currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}`
 
 export let legacyRemixCssImportSemantics: () => Plugin[] = () => {
   return [
