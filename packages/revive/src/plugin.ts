@@ -792,6 +792,24 @@ export let revive: (options?: RevivePluginOptions) => Plugin[] = (
         return { code, map: result.map }
       },
     },
+    {
+      name: 'revive-hmr-updates',
+      async handleHotUpdate({ server, file, modules }) {
+        let config = await readConfig()
+        let route = getRoute(config, file)
+        if (route) {
+          server.ws.send({
+            type: 'custom',
+            event: 'revive:hmr-route',
+            data: {
+              route: await getRouteMetadata(config, viteChildCompiler, route),
+            },
+          })
+          return modules
+        }
+        return modules
+      },
+    },
   ]
 }
 
@@ -852,4 +870,39 @@ export let legacyRemixCssImportSemantics: () => Plugin[] = () => {
       },
     },
   ]
+}
+
+function getRoute(config: RemixConfig, file: string): Route | undefined {
+  if (!file.startsWith(config.appDirectory)) return
+  let routePath = path.relative(config.appDirectory, file)
+  let route = Object.values(config.routes).find((r) => r.file === routePath)
+  return route
+}
+
+async function getRouteMetadata(
+  config: RemixConfig,
+  viteChildCompiler: ViteDevServer | null,
+  route: Route
+) {
+  const sourceExports = await getRouteModuleExports(
+    viteChildCompiler,
+    config,
+    route.file
+  )
+
+  let info = {
+    id: route.id,
+    parentId: route.parentId,
+    path: route.path,
+    index: route.index,
+    caseSensitive: route.caseSensitive,
+    module: `${resolveFsUrl(
+      resolveRelativeRouteFilePath(route, config)
+    )}?import`, // Ensure the Vite dev server responds with a JS module
+    hasAction: sourceExports.includes('action'),
+    hasLoader: sourceExports.includes('loader'),
+    hasErrorBoundary: sourceExports.includes('ErrorBoundary'),
+    imports: [],
+  }
+  return info
 }

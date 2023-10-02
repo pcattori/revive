@@ -10,7 +10,10 @@ function debounce(fn, delay) {
 }
 
 /* eslint-disable no-undef */
-const enqueueUpdate = debounce(exports.performReactRefresh, 16)
+const enqueueUpdate = debounce(async () => {
+  await revalidate()
+  exports.performReactRefresh()
+}, 16)
 
 // Taken from https://github.com/pmmmwh/react-refresh-webpack-plugin/blob/main/lib/runtime/RefreshUtils.js#L141
 // This allows to resister components not detected by SWC like styled component
@@ -66,6 +69,34 @@ function predicateOnExport(moduleExports, predicate) {
 // dynamic import is present (https://github.com/vitejs/vite/pull/12732)
 function __hmr_import(module) {
   return import(/* @vite-ignore */ module)
+}
+
+async function revalidate() {
+  let { promise, resolve } = channel()
+  let unsub = __remixRouter.subscribe((state) => {
+    if (state.revalidation === 'idle') {
+      unsub()
+      // Ensure RouterProvider setState has flushed before re-rendering
+      // TODO: is `setTimeout` necessary when using promise resolve?
+      setTimeout(() => {
+        resolve()
+      }, 1)
+    }
+  })
+  window.__remixRevalidation = (window.__remixRevalidation || 0) + 1
+  __remixRouter.revalidate()
+  return promise
+}
+
+function channel() {
+  let resolve
+  let reject
+
+  let promise = new Promise((_resolve, _reject) => {
+    resolve = _resolve
+    reject = _reject
+  })
+  return { promise, resolve, reject }
 }
 
 exports.__hmr_import = __hmr_import
