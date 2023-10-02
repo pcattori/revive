@@ -525,7 +525,8 @@ export let revive: (options?: RevivePluginOptions) => Plugin[] = (
                   typeof plugin === 'object' &&
                   plugin !== null &&
                   'name' in plugin &&
-                  plugin.name !== 'revive'
+                  plugin.name !== 'revive' &&
+                  plugin.name !== 'revive-hmr-updates'
               ),
             {
               name: 'no-hmr',
@@ -798,6 +799,7 @@ export let revive: (options?: RevivePluginOptions) => Plugin[] = (
         const reviveConfig = await resolveReviveConfig()
         let route = getRoute(reviveConfig, file)
         if (route) {
+          // TODO: update router with new route metadata within refresh utils
           server.ws.send({
             type: 'custom',
             event: 'revive:hmr-route',
