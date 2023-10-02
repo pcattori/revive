@@ -633,6 +633,17 @@ export let revive: (options?: RevivePluginOptions) => Plugin[] = (
       },
     },
     {
+      name: 'revive-empty-client-modules',
+      enforce: 'pre',
+      async transform(_code, id, options) {
+        if (options?.ssr && /\.client(\.[cm]?[jt]sx?)?$/.test(id))
+          return {
+            code: 'export default {}',
+            map: null,
+          }
+      },
+    },
+    {
       name: 'revive-remove-server-exports',
       enforce: 'post', // Ensure we're operating on the transformed code to support MDX etc.
       async transform(code, id, options) {
