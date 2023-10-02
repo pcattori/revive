@@ -12,7 +12,7 @@
     "build": "nx run-many --target build",
     "build:packages": "nx run-many --target build --exclude *-app",
     "build:app": "nx run express-app:build",
-    "build:compat": "nx run express-compat-app:compat:build",
+    "build:compat": "nx run express-compat-app:build",
     "build:compat:remix": "nx run express-compat-app:build:remix",
     "serve": "nx run express-app:serve",
     "serve:compat": "nx run express-compat-app:serve",
