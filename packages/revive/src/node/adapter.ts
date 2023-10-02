@@ -190,16 +190,16 @@ export let createRequestHandler = (
   build: ServerBuild,
   {
     mode = 'production',
-    criticalStyles,
+    criticalCss,
   }: {
     mode?: string
-    criticalStyles?: string
+    criticalCss?: string
   }
 ) => {
   const handler = createBaseRequestHandler(build, mode)
   return async (req: IncomingMessage, res: ServerResponse) => {
     let request = createRequest(req)
-    let response = await handler(request, {}, criticalStyles)
+    let response = await handler(request, {}, { criticalCss })
     handleNodeResponse(response, res)
   }
 }

@@ -573,7 +573,7 @@ export let revive: (options?: RevivePluginOptions) => Plugin[] = (
 
               const handle = createRequestHandler(build, {
                 mode: 'development',
-                criticalStyles: await getStylesForUrl(
+                criticalCss: await getStylesForUrl(
                   vite,
                   reviveConfig,
                   cssModulesManifest,
