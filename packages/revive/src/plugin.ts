@@ -508,6 +508,8 @@ export let revive: (options?: RevivePluginOptions) => Plugin[] = (
 
         viteChildCompiler = await createViteDevServer({
           ...viteUserConfig,
+          configFile: false,
+          envFile: false,
           plugins: [
             ...(viteUserConfig.plugins ?? [])
               .flat()
@@ -535,7 +537,6 @@ export let revive: (options?: RevivePluginOptions) => Plugin[] = (
               },
             },
           ],
-          configFile: false,
         })
         await viteChildCompiler.pluginContainer.buildStart({})
 
