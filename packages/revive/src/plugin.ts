@@ -193,7 +193,8 @@ export let revive: (options?: RevivePluginOptions) => Plugin[] = (
   let viteChildCompiler: ViteDevServer | null = null
 
   const resolveReviveConfig = async (): Promise<ResolvedReviveConfig> => {
-    const rootDirectory = viteUserConfig.root ?? process.cwd()
+    const rootDirectory =
+      viteUserConfig.root ?? process.env.REMIX_ROOT ?? process.cwd()
     const appDirectory = path.resolve(
       rootDirectory,
       options.appDirectory ?? 'app'
