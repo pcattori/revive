@@ -5,9 +5,11 @@ import remarkMdxFilename from 'remark-mdx-filename'
 import remarkRemixMdxFrontmatter from 'remark-remix-mdx-frontmatter'
 import { revive, legacyRemixCssImportSemantics } from 'revive'
 
+import remixConfig from './remix.config.mjs'
+
 export default defineConfig({
   plugins: [
-    revive(),
+    revive(remixConfig),
     legacyRemixCssImportSemantics(),
     mdx({
       remarkPlugins: [

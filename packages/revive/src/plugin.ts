@@ -2,10 +2,22 @@ import { BinaryLike, createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
 import * as path from 'node:path'
 import * as fs from 'node:fs/promises'
+import { existsSync as fsExistsSync } from 'node:fs'
+import { execSync } from 'node:child_process'
 
 import babel from '@babel/core'
-import { RemixConfig, readConfig } from '@remix-run/dev/dist/config.js'
+import PackageJson from '@npmcli/package-json'
+import {
+  AppConfig as RemixUserConfig,
+  RemixConfig as ResolvedRemixConfig,
+} from '@remix-run/dev/dist/config.js'
+import {
+  defineRoutes,
+  RouteManifest,
+} from '@remix-run/dev/dist/config/routes.js'
 import { Manifest } from '@remix-run/dev/dist/manifest.js'
+import { flatRoutes } from '@remix-run/dev/dist/config/flat-routes.js'
+import { detectPackageManager } from '@remix-run/dev/dist/cli/detectPackageManager.js'
 import { ServerBuild } from '@remix-run/server-runtime'
 import {
   Plugin,
@@ -29,6 +41,31 @@ import { removeExports } from './remove-exports.js'
 import { transformLegacyCssImports } from './legacy-css-imports.js'
 import { replaceImportSpecifier } from './replace-import-specifier.js'
 
+export type RevivePluginOptions = Pick<
+  RemixUserConfig,
+  | 'appDirectory'
+  | 'assetsBuildDirectory'
+  | 'ignoredRouteFiles'
+  | 'publicPath'
+  | 'routes'
+  | 'serverBuildPath'
+  | 'serverModuleFormat'
+>
+
+type ResolvedReviveConfig = Pick<
+  ResolvedRemixConfig,
+  | 'appDirectory'
+  | 'assetsBuildDirectory'
+  | 'entryClientFile'
+  | 'entryServerFile'
+  | 'future'
+  | 'publicPath'
+  | 'relativeAssetsBuildDirectory'
+  | 'routes'
+  | 'serverBuildPath'
+  | 'serverModuleFormat'
+>
+
 let serverEntryId = VirtualModule.id('server-entry')
 let serverManifestId = VirtualModule.id('server-manifest')
 let browserManifestId = VirtualModule.id('browser-manifest')
@@ -46,53 +83,15 @@ const resolveFsUrl = (filePath: string) => `/@fs${normalizePath(filePath)}`
 
 const isJsFile = (filePath: string) => /\.[cm]?[jt]sx?$/i.test(filePath)
 
-type Route = RemixConfig['routes'][string]
-const resolveRelativeRouteFilePath = (route: Route, config: RemixConfig) => {
+type Route = RouteManifest[string]
+const resolveRelativeRouteFilePath = (
+  route: Route,
+  reviveConfig: ResolvedReviveConfig
+) => {
   const file = route.file
-  const fullPath = path.resolve(config.appDirectory, file)
+  const fullPath = path.resolve(reviveConfig.appDirectory, file)
 
   return normalizePath(fullPath)
-}
-
-const getServerEntry = (config: RemixConfig) => {
-  return `
-  import * as entryServer from ${JSON.stringify(
-    resolveFsUrl(path.resolve(config.appDirectory, config.entryServerFile))
-  )};
-  ${Object.keys(config.routes)
-    .map((key, index) => {
-      const route = config.routes[key]!
-      return `import * as route${index} from ${JSON.stringify(
-        resolveFsUrl(resolveRelativeRouteFilePath(route, config))
-      )};`
-    })
-    .join('\n')}
-    export { default as assets } from ${JSON.stringify(serverManifestId)};
-    export const assetsBuildDirectory = ${JSON.stringify(
-      config.relativeAssetsBuildDirectory
-    )};
-    ${
-      config.future
-        ? `export const future = ${JSON.stringify(config.future)}`
-        : ''
-    };
-    export const publicPath = ${JSON.stringify(config.publicPath)};
-    export const entry = { module: entryServer };
-    export const routes = {
-      ${Object.keys(config.routes)
-        .map((key, index) => {
-          const route = config.routes[key]!
-          return `${JSON.stringify(key)}: {
-        id: ${JSON.stringify(route.id)},
-        parentId: ${JSON.stringify(route.parentId)},
-        path: ${JSON.stringify(route.path)},
-        index: ${JSON.stringify(route.index)},
-        caseSensitive: ${JSON.stringify(route.caseSensitive)},
-        module: route${index}
-      }`
-        })
-        .join(',\n  ')}
-    };`
 }
 
 let vmods = [serverEntryId, serverManifestId, browserManifestId]
@@ -103,22 +102,22 @@ const getHash = (source: BinaryLike, maxLength?: number): string => {
 }
 
 const resolveBuildAssetPaths = (
-  config: RemixConfig,
+  reviveConfig: ResolvedReviveConfig,
   manifest: ViteManifest,
   appRelativePath: string
 ): Manifest['entry'] & { css: string[] } => {
-  const appPath = path.relative(process.cwd(), config.appDirectory)
+  const appPath = path.relative(process.cwd(), reviveConfig.appDirectory)
   const manifestKey = normalizePath(path.join(appPath, appRelativePath))
   const manifestEntry = manifest[manifestKey]
   return {
-    module: `${config.publicPath}${manifestEntry.file}`,
+    module: `${reviveConfig.publicPath}${manifestEntry.file}`,
     imports:
       manifestEntry.imports?.map((imported) => {
-        return `${config.publicPath}${manifest[imported].file}`
+        return `${reviveConfig.publicPath}${manifest[imported].file}`
       }) ?? [],
     css:
       manifestEntry.css?.map((href) => {
-        return `${config.publicPath}${href}`
+        return `${reviveConfig.publicPath}${href}`
       }) ?? [],
   }
 }
@@ -130,7 +129,7 @@ const writeFileSafe = async (file: string, contents: string): Promise<void> => {
 
 const getRouteModuleExports = async (
   viteChildCompiler: ViteDevServer | null,
-  config: RemixConfig,
+  reviveConfig: ResolvedReviveConfig,
   routeFile: string
 ): Promise<string[]> => {
   if (!viteChildCompiler) {
@@ -144,7 +143,7 @@ const getRouteModuleExports = async (
 
   const ssr = true
   const { pluginContainer, moduleGraph } = viteChildCompiler
-  const routePath = path.join(config.appDirectory, routeFile)
+  const routePath = path.join(reviveConfig.appDirectory, routeFile)
   const url = resolveFsUrl(routePath)
 
   const resolveId = async () => {
@@ -167,106 +166,22 @@ const getRouteModuleExports = async (
   return exportNames
 }
 
-const createBuildManifest = async (
-  viteChildCompiler: ViteDevServer | null
-): Promise<Manifest> => {
-  const config = await readConfig()
-  const viteManifest = JSON.parse(
-    await fs.readFile(
-      path.resolve(config.assetsBuildDirectory, 'manifest.json'),
-      'utf-8'
-    )
-  ) as ViteManifest
-
-  const entry: Manifest['entry'] = resolveBuildAssetPaths(
-    config,
-    viteManifest,
-    config.entryClientFile
-  )
-
-  const routes: Manifest['routes'] = {}
-  for (const [key, route] of Object.entries(config.routes)) {
-    const sourceExports = await getRouteModuleExports(
-      viteChildCompiler,
-      config,
-      route.file
-    )
-
-    routes[key] = {
-      id: route.id,
-      parentId: route.parentId,
-      path: route.path,
-      index: route.index,
-      caseSensitive: route.caseSensitive,
-      hasAction: sourceExports.includes('action'),
-      hasLoader: sourceExports.includes('loader'),
-      hasErrorBoundary: sourceExports.includes('ErrorBoundary'),
-      ...resolveBuildAssetPaths(config, viteManifest, route.file),
-    }
+const entryExts = ['.js', '.jsx', '.ts', '.tsx']
+const findEntry = (dir: string, basename: string): string | undefined => {
+  for (let ext of entryExts) {
+    let file = path.resolve(dir, basename + ext)
+    if (fsExistsSync(file)) return path.relative(dir, file)
   }
 
-  const fingerprintedValues = { entry, routes }
-  const version = getHash(JSON.stringify(fingerprintedValues), 8)
-  const manifestFilename = `manifest-${version}.js`
-  const url = `${config.publicPath}${manifestFilename}`
-  const nonFingerprintedValues = { url, version }
-
-  const manifest: Manifest = {
-    ...fingerprintedValues,
-    ...nonFingerprintedValues,
-  }
-
-  await writeFileSafe(
-    path.join(config.assetsBuildDirectory, manifestFilename),
-    `window.__remixManifest=${JSON.stringify(manifest)};`
-  )
-
-  return manifest
+  return undefined
 }
 
-const getDevManifest = async (
-  viteChildCompiler: ViteDevServer | null
-): Promise<Manifest> => {
-  const config = await readConfig()
-  const routes: Manifest['routes'] = {}
+const addTrailingSlash = (path: string): string =>
+  path.endsWith('/') ? path : path + '/'
 
-  for (const [key, route] of Object.entries(config.routes)) {
-    const sourceExports = await getRouteModuleExports(
-      viteChildCompiler,
-      config,
-      route.file
-    )
-
-    routes[key] = {
-      id: route.id,
-      parentId: route.parentId,
-      path: route.path,
-      index: route.index,
-      caseSensitive: route.caseSensitive,
-      module: `${resolveFsUrl(resolveRelativeRouteFilePath(route, config))}${
-        isJsFile(route.file) ? '' : '?import' // Ensure the Vite dev server responds with a JS module
-      }`,
-      hasAction: sourceExports.includes('action'),
-      hasLoader: sourceExports.includes('loader'),
-      hasErrorBoundary: sourceExports.includes('ErrorBoundary'),
-      imports: [],
-    }
-  }
-
-  return {
-    version: String(Math.random()),
-    url: VirtualModule.url(browserManifestId),
-    entry: {
-      module: resolveFsUrl(
-        path.resolve(config.appDirectory, config.entryClientFile)
-      ),
-      imports: [],
-    },
-    routes,
-  }
-}
-
-export let revive: () => Plugin[] = () => {
+export let revive: (options?: RevivePluginOptions) => Plugin[] = (
+  options = {}
+) => {
   let viteCommand: ResolvedViteConfig['command']
   let viteUserConfig: ViteUserConfig
 
@@ -277,6 +192,265 @@ export let revive: () => Plugin[] = () => {
 
   let viteChildCompiler: ViteDevServer | null = null
 
+  const resolveReviveConfig = async (): Promise<ResolvedReviveConfig> => {
+    const rootDirectory = viteUserConfig.root ?? process.cwd()
+    const appDirectory = path.resolve(
+      rootDirectory,
+      options.appDirectory ?? 'app'
+    )
+    const serverBuildPath = path.resolve(
+      rootDirectory,
+      options.serverBuildPath ?? 'build/index.js'
+    )
+    const serverModuleFormat = options.serverModuleFormat ?? 'esm'
+    const relativeAssetsBuildDirectory =
+      options.assetsBuildDirectory ?? path.join('public', 'build')
+    const assetsBuildDirectory = path.resolve(
+      rootDirectory,
+      relativeAssetsBuildDirectory
+    )
+
+    const userEntryClientFile = findEntry(appDirectory, 'entry.client')
+    const entryClientFile = userEntryClientFile ?? 'entry.client.tsx'
+
+    const userEntryServerFile = findEntry(appDirectory, 'entry.server')
+    let entryServerFile: string
+
+    let pkgJson = await PackageJson.load(rootDirectory)
+    let deps = pkgJson.content.dependencies ?? {}
+
+    if (userEntryServerFile) {
+      entryServerFile = userEntryServerFile
+    } else {
+      let serverRuntime = deps['@remix-run/deno']
+        ? 'deno'
+        : deps['@remix-run/cloudflare']
+        ? 'cloudflare'
+        : deps['@remix-run/node']
+        ? 'node'
+        : undefined
+
+      if (!serverRuntime) {
+        let serverRuntimes = [
+          '@remix-run/deno',
+          '@remix-run/cloudflare',
+          '@remix-run/node',
+        ]
+        let disjunctionListFormat = new Intl.ListFormat('en', {
+          style: 'long',
+          type: 'disjunction',
+        })
+        let formattedList = disjunctionListFormat.format(serverRuntimes)
+        throw new Error(
+          `Could not determine server runtime. Please install one of the following: ${formattedList}`
+        )
+      }
+
+      if (!deps['isbot']) {
+        console.log(
+          'adding `isbot` to your package.json, you should commit this change'
+        )
+
+        pkgJson.update({
+          dependencies: {
+            ...pkgJson.content.dependencies,
+            isbot: 'latest',
+          },
+        })
+
+        await pkgJson.save()
+
+        let packageManager = detectPackageManager() ?? 'npm'
+
+        execSync(`${packageManager} install`, {
+          cwd: rootDirectory,
+          stdio: 'inherit',
+        })
+      }
+
+      entryServerFile = `entry.server.${serverRuntime}.tsx`
+    }
+
+    const publicPath = addTrailingSlash(options.publicPath ?? '/build/')
+
+    const rootRouteFile = findEntry(appDirectory, 'root')
+    if (!rootRouteFile) {
+      throw new Error(`Missing "root" route file in ${appDirectory}`)
+    }
+
+    const routes: RouteManifest = {
+      root: { path: '', id: 'root', file: rootRouteFile },
+    }
+
+    if (fsExistsSync(path.resolve(appDirectory, 'routes'))) {
+      const fileRoutes = flatRoutes(appDirectory, options.ignoredRouteFiles)
+      for (const route of Object.values(fileRoutes)) {
+        routes[route.id] = { ...route, parentId: route.parentId || 'root' }
+      }
+    }
+    if (options.routes) {
+      const manualRoutes = await options.routes(defineRoutes)
+      for (const route of Object.values(manualRoutes)) {
+        routes[route.id] = { ...route, parentId: route.parentId || 'root' }
+      }
+    }
+
+    return {
+      appDirectory,
+      assetsBuildDirectory,
+      entryClientFile,
+      publicPath,
+      routes,
+      entryServerFile,
+      serverBuildPath,
+      serverModuleFormat,
+      relativeAssetsBuildDirectory,
+      future: {},
+    }
+  }
+
+  const getServerEntry = async () => {
+    const reviveConfig = await resolveReviveConfig()
+
+    return `
+    import * as entryServer from ${JSON.stringify(
+      resolveFsUrl(
+        path.resolve(reviveConfig.appDirectory, reviveConfig.entryServerFile)
+      )
+    )};
+    ${Object.keys(reviveConfig.routes)
+      .map((key, index) => {
+        const route = reviveConfig.routes[key]!
+        return `import * as route${index} from ${JSON.stringify(
+          resolveFsUrl(resolveRelativeRouteFilePath(route, reviveConfig))
+        )};`
+      })
+      .join('\n')}
+      export { default as assets } from ${JSON.stringify(serverManifestId)};
+      export const assetsBuildDirectory = ${JSON.stringify(
+        reviveConfig.relativeAssetsBuildDirectory
+      )};
+      ${
+        reviveConfig.future
+          ? `export const future = ${JSON.stringify(reviveConfig.future)}`
+          : ''
+      };
+      export const publicPath = ${JSON.stringify(reviveConfig.publicPath)};
+      export const entry = { module: entryServer };
+      export const routes = {
+        ${Object.keys(reviveConfig.routes)
+          .map((key, index) => {
+            const route = reviveConfig.routes[key]!
+            return `${JSON.stringify(key)}: {
+          id: ${JSON.stringify(route.id)},
+          parentId: ${JSON.stringify(route.parentId)},
+          path: ${JSON.stringify(route.path)},
+          index: ${JSON.stringify(route.index)},
+          caseSensitive: ${JSON.stringify(route.caseSensitive)},
+          module: route${index}
+        }`
+          })
+          .join(',\n  ')}
+      };`
+  }
+
+  const createBuildManifest = async (): Promise<Manifest> => {
+    const reviveConfig = await resolveReviveConfig()
+    const viteManifest = JSON.parse(
+      await fs.readFile(
+        path.resolve(reviveConfig.assetsBuildDirectory, 'manifest.json'),
+        'utf-8'
+      )
+    ) as ViteManifest
+
+    const entry: Manifest['entry'] = resolveBuildAssetPaths(
+      reviveConfig,
+      viteManifest,
+      reviveConfig.entryClientFile
+    )
+
+    const routes: Manifest['routes'] = {}
+    for (const [key, route] of Object.entries(reviveConfig.routes)) {
+      const sourceExports = await getRouteModuleExports(
+        viteChildCompiler,
+        reviveConfig,
+        route.file
+      )
+
+      routes[key] = {
+        id: route.id,
+        parentId: route.parentId,
+        path: route.path,
+        index: route.index,
+        caseSensitive: route.caseSensitive,
+        hasAction: sourceExports.includes('action'),
+        hasLoader: sourceExports.includes('loader'),
+        hasErrorBoundary: sourceExports.includes('ErrorBoundary'),
+        ...resolveBuildAssetPaths(reviveConfig, viteManifest, route.file),
+      }
+    }
+
+    const fingerprintedValues = { entry, routes }
+    const version = getHash(JSON.stringify(fingerprintedValues), 8)
+    const manifestFilename = `manifest-${version}.js`
+    const url = `${reviveConfig.publicPath}${manifestFilename}`
+    const nonFingerprintedValues = { url, version }
+
+    const manifest: Manifest = {
+      ...fingerprintedValues,
+      ...nonFingerprintedValues,
+    }
+
+    await writeFileSafe(
+      path.join(reviveConfig.assetsBuildDirectory, manifestFilename),
+      `window.__remixManifest=${JSON.stringify(manifest)};`
+    )
+
+    return manifest
+  }
+
+  const getDevManifest = async (): Promise<Manifest> => {
+    const reviveConfig = await resolveReviveConfig()
+    const routes: Manifest['routes'] = {}
+
+    for (const [key, route] of Object.entries(reviveConfig.routes)) {
+      const sourceExports = await getRouteModuleExports(
+        viteChildCompiler,
+        reviveConfig,
+        route.file
+      )
+
+      routes[key] = {
+        id: route.id,
+        parentId: route.parentId,
+        path: route.path,
+        index: route.index,
+        caseSensitive: route.caseSensitive,
+        module: `${resolveFsUrl(
+          resolveRelativeRouteFilePath(route, reviveConfig)
+        )}${
+          isJsFile(route.file) ? '' : '?import' // Ensure the Vite dev server responds with a JS module
+        }`,
+        hasAction: sourceExports.includes('action'),
+        hasLoader: sourceExports.includes('loader'),
+        hasErrorBoundary: sourceExports.includes('ErrorBoundary'),
+        imports: [],
+      }
+    }
+
+    return {
+      version: String(Math.random()),
+      url: VirtualModule.url(browserManifestId),
+      entry: {
+        module: resolveFsUrl(
+          path.resolve(reviveConfig.appDirectory, reviveConfig.entryClientFile)
+        ),
+        imports: [],
+      },
+      routes,
+    }
+  }
+
   return [
     {
       name: 'revive',
@@ -284,43 +458,43 @@ export let revive: () => Plugin[] = () => {
         viteUserConfig = _viteUserConfig
         viteCommand = viteConfigEnv.command
 
-        const remixConfig = await readConfig()
+        const reviveConfig = await resolveReviveConfig()
 
         return {
           appType: 'custom',
           ...(viteCommand === 'build' && {
-            base: remixConfig.publicPath,
+            base: reviveConfig.publicPath,
             build: {
               ...viteUserConfig.build,
               ...(!viteConfigEnv.ssrBuild
                 ? {
                     manifest: true,
-                    outDir: remixConfig.assetsBuildDirectory,
+                    outDir: reviveConfig.assetsBuildDirectory,
                     rollupOptions: {
                       ...viteUserConfig.build?.rollupOptions,
                       preserveEntrySignatures: 'exports-only',
                       input: [
                         path.resolve(
-                          remixConfig.appDirectory,
-                          remixConfig.entryClientFile
+                          reviveConfig.appDirectory,
+                          reviveConfig.entryClientFile
                         ),
-                        ...Object.values(remixConfig.routes).map((route) =>
-                          path.resolve(remixConfig.appDirectory, route.file)
+                        ...Object.values(reviveConfig.routes).map((route) =>
+                          path.resolve(reviveConfig.appDirectory, route.file)
                         ),
                       ],
                     },
                   }
                 : {
-                    outDir: path.dirname(remixConfig.serverBuildPath),
+                    outDir: path.dirname(reviveConfig.serverBuildPath),
                     rollupOptions: {
                       ...viteUserConfig.build?.rollupOptions,
                       preserveEntrySignatures: 'exports-only',
                       input: serverEntryId,
                       output: {
                         entryFileNames: path.basename(
-                          remixConfig.serverBuildPath
+                          reviveConfig.serverBuildPath
                         ),
-                        format: remixConfig.serverModuleFormat,
+                        format: reviveConfig.serverModuleFormat,
                       },
                     },
                   }),
@@ -366,11 +540,7 @@ export let revive: () => Plugin[] = () => {
 
         ssrBuildContext =
           viteConfig.build.ssr && viteCommand === 'build'
-            ? {
-                isSsrBuild: true,
-                getManifest: async () =>
-                  await createBuildManifest(viteChildCompiler),
-              }
+            ? { isSsrBuild: true, getManifest: createBuildManifest }
             : { isSsrBuild: false }
       },
       transform(code, id) {
@@ -394,8 +564,8 @@ export let revive: () => Plugin[] = () => {
               })
 
               const { url } = req
-              const [config, build] = await Promise.all([
-                readConfig(),
+              const [reviveConfig, build] = await Promise.all([
+                resolveReviveConfig(),
                 vite.ssrLoadModule(serverEntryId) as Promise<ServerBuild>,
               ])
 
@@ -403,7 +573,7 @@ export let revive: () => Plugin[] = () => {
                 mode: 'development',
                 criticalStyles: await getStylesForUrl(
                   vite,
-                  config,
+                  reviveConfig,
                   cssModulesManifest,
                   build,
                   url
@@ -430,13 +600,12 @@ export let revive: () => Plugin[] = () => {
       async load(id) {
         switch (id) {
           case VirtualModule.resolve(serverEntryId): {
-            const config = await readConfig()
-            return getServerEntry(config)
+            return await getServerEntry()
           }
           case VirtualModule.resolve(serverManifestId): {
             const manifest = ssrBuildContext.isSsrBuild
               ? await ssrBuildContext.getManifest()
-              : await getDevManifest(viteChildCompiler)
+              : await getDevManifest()
 
             return `export default ${jsesc(manifest, { es6: true })};`
           }
@@ -445,7 +614,7 @@ export let revive: () => Plugin[] = () => {
               throw new Error('This module only exists in development')
             }
 
-            const manifest = await getDevManifest(viteChildCompiler)
+            const manifest = await getDevManifest()
 
             return `window.__remixManifest=${jsesc(manifest, { es6: true })};`
           }
@@ -469,19 +638,19 @@ export let revive: () => Plugin[] = () => {
       async transform(code, id, options) {
         if (options?.ssr) return
 
-        let config = await readConfig()
+        const reviveConfig = await resolveReviveConfig()
 
         // get route from vite module id (TODO: make this more efficient)
-        if (!id.startsWith(config.appDirectory)) return
-        let routePath = path.relative(config.appDirectory, id)
-        let route = Object.values(config.routes).find(
+        if (!id.startsWith(reviveConfig.appDirectory)) return
+        const routePath = path.relative(reviveConfig.appDirectory, id)
+        const route = Object.values(reviveConfig.routes).find(
           (r) => r.file === routePath
         )
         if (!route) return
 
         const routeExports = await getRouteModuleExports(
           viteChildCompiler,
-          config,
+          reviveConfig,
           route.file
         )
 

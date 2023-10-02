@@ -1,5 +1,5 @@
 import * as path from 'node:path'
-import { RemixConfig } from '@remix-run/dev/dist/config.js'
+import { RemixConfig as ResolvedRemixConfig } from '@remix-run/dev/dist/config.js'
 import { ServerBuild } from '@remix-run/server-runtime'
 import { matchRoutes } from '@remix-run/router'
 import { ModuleNode, ViteDevServer } from 'vite'
@@ -154,23 +154,9 @@ const createRoutes = (
   }))
 }
 
-const routeFilesForUrl = (
-  config: RemixConfig,
-  build: ServerBuild,
-  requestUrl: string
-) => {
-  const routes = createRoutes(build.routes)
-  const appPath = path.relative(process.cwd(), config.appDirectory)
-  return (
-    matchRoutes(routes, requestUrl)?.map((match) =>
-      path.join(appPath, config.routes[match.route.id].file)
-    ) ?? []
-  )
-}
-
 export const getStylesForUrl = async (
   vite: ViteDevServer,
-  config: RemixConfig,
+  config: Pick<ResolvedRemixConfig, 'appDirectory' | 'routes'>,
   cssModulesManifest: Record<string, string>,
   build: ServerBuild,
   url: string | undefined
@@ -179,7 +165,13 @@ export const getStylesForUrl = async (
     return undefined
   }
 
-  const documentRouteFiles = routeFilesForUrl(config, build, url)
+  const routes = createRoutes(build.routes)
+  const appPath = path.relative(process.cwd(), config.appDirectory)
+  const documentRouteFiles =
+    matchRoutes(routes, url)?.map((match) =>
+      path.join(appPath, config.routes[match.route.id].file)
+    ) ?? []
+
   const styles = await getStylesForFiles(
     vite,
     cssModulesManifest,
