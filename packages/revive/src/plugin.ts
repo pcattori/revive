@@ -757,6 +757,7 @@ export let revive: (options?: RevivePluginOptions) => Plugin[] = (
       // TODO: should `enforce` be `post` so that things like MDX get react-refresh/babel applied?
       enforce: 'pre',
       async transform(code, id, options) {
+        if (viteCommand !== 'serve') return
         if (id.includes('/node_modules/')) return
 
         const [filepath] = id.split('?')
