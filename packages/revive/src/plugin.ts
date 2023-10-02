@@ -795,14 +795,18 @@ export let revive: (options?: RevivePluginOptions) => Plugin[] = (
     {
       name: 'revive-hmr-updates',
       async handleHotUpdate({ server, file, modules }) {
-        let config = await readConfig()
-        let route = getRoute(config, file)
+        const reviveConfig = await resolveReviveConfig()
+        let route = getRoute(reviveConfig, file)
         if (route) {
           server.ws.send({
             type: 'custom',
             event: 'revive:hmr-route',
             data: {
-              route: await getRouteMetadata(config, viteChildCompiler, route),
+              route: await getRouteMetadata(
+                reviveConfig,
+                viteChildCompiler,
+                route
+              ),
             },
           })
           return modules
@@ -872,21 +876,26 @@ export let legacyRemixCssImportSemantics: () => Plugin[] = () => {
   ]
 }
 
-function getRoute(config: RemixConfig, file: string): Route | undefined {
-  if (!file.startsWith(config.appDirectory)) return
-  let routePath = path.relative(config.appDirectory, file)
-  let route = Object.values(config.routes).find((r) => r.file === routePath)
+function getRoute(
+  reviveConfig: ResolvedReviveConfig,
+  file: string
+): Route | undefined {
+  if (!file.startsWith(reviveConfig.appDirectory)) return
+  let routePath = path.relative(reviveConfig.appDirectory, file)
+  let route = Object.values(reviveConfig.routes).find(
+    (r) => r.file === routePath
+  )
   return route
 }
 
 async function getRouteMetadata(
-  config: RemixConfig,
+  reviveConfig: ResolvedReviveConfig,
   viteChildCompiler: ViteDevServer | null,
   route: Route
 ) {
   const sourceExports = await getRouteModuleExports(
     viteChildCompiler,
-    config,
+    reviveConfig,
     route.file
   )
 
@@ -897,7 +906,7 @@ async function getRouteMetadata(
     index: route.index,
     caseSensitive: route.caseSensitive,
     module: `${resolveFsUrl(
-      resolveRelativeRouteFilePath(route, config)
+      resolveRelativeRouteFilePath(route, reviveConfig)
     )}?import`, // Ensure the Vite dev server responds with a JS module
     hasAction: sourceExports.includes('action'),
     hasLoader: sourceExports.includes('loader'),
