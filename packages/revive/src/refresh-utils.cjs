@@ -121,10 +121,7 @@ async function revalidate() {
     if (state.revalidation === 'idle') {
       unsub()
       // Ensure RouterProvider setState has flushed before re-rendering
-      // TODO: is `setTimeout` necessary when using promise resolve?
-      setTimeout(() => {
-        resolve()
-      }, 1)
+      resolve()
     }
   })
   window.__remixRevalidation = (window.__remixRevalidation || 0) + 1
