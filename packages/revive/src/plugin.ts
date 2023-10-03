@@ -463,6 +463,7 @@ export let revive: (options?: RevivePluginOptions) => Plugin[] = (
 
         return {
           appType: 'custom',
+          experimental: { hmrPartialAccept: true },
           ...(viteCommand === 'build' && {
             base: reviveConfig.publicPath,
             build: {
@@ -788,7 +789,8 @@ export let revive: (options?: RevivePluginOptions) => Plugin[] = (
         code = result.code!
         const refreshContentRE = /\$Refresh(?:Reg|Sig)\$\(/
         if (refreshContentRE.test(code)) {
-          code = addRefreshWrapper(code, id)
+          const reviveConfig = await resolveReviveConfig()
+          code = addRefreshWrapper(reviveConfig, code, id)
         }
         return { code, map: result.map }
       },
@@ -819,11 +821,17 @@ export let revive: (options?: RevivePluginOptions) => Plugin[] = (
   ]
 }
 
-function addRefreshWrapper(code: string, id: string): string {
+function addRefreshWrapper(
+  reviveConfig: ResolvedReviveConfig,
+  code: string,
+  id: string
+): string {
+  let isRoute = getRoute(reviveConfig, id)
+  let footer = isRoute ? REACT_REFRESH_ROUTE_FOOTER : REACT_REFRESH_FOOTER
   return (
     REACT_REFRESH_HEADER.replace('__SOURCE__', JSON.stringify(id)) +
     code +
-    REACT_REFRESH_FOOTER.replace('__SOURCE__', JSON.stringify(id))
+    footer.replace('__SOURCE__', JSON.stringify(id))
   )
 }
 
@@ -860,6 +868,20 @@ if (import.meta.hot && !inWebWorker) {
       if (!nextExports) return;
       const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate(currentExports, nextExports);
       if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}`
+
+const REACT_REFRESH_ROUTE_FOOTER = `
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh(__SOURCE__, currentExports);
+    import.meta.hot.acceptExports(["default", "links", "meta"], (nextExports) => {
+      if (!nextExports) return;
+      // TODO: dynamically accept user-defined component exports (e.g. "fullstack components")
+      RefreshRuntime.enqueueUpdate();
     });
   });
 }`

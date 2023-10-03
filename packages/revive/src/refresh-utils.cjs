@@ -11,7 +11,49 @@ function debounce(fn, delay) {
 
 /* eslint-disable no-undef */
 const enqueueUpdate = debounce(async () => {
+  let manifest
+  if (routeUpdates.size > 0) {
+    manifest = JSON.parse(JSON.stringify(__remixManifest))
+
+    routeUpdates.forEach(async (route) => {
+      manifest[route.id] = route
+
+      let imported = await __hmr_import(route.module)
+      let routeModule = {
+        ...imported,
+        // react-refresh takes care of updating these in-place,
+        // if we don't preserve existing values we'll loose state.
+        default: imported.default
+          ? window.__remixRouteModules[route.id]?.default ?? imported.default
+          : imported.default,
+        ErrorBoundary: imported.ErrorBoundary
+          ? window.__remixRouteModules[route.id]?.ErrorBoundary ??
+            imported.ErrorBoundary
+          : imported.ErrorBoundary,
+      }
+      window.__remixRouteModules[route.id] = routeModule
+    })
+
+    let needsRevalidation = new Set(
+      Array.from(routeUpdates.values())
+        .filter((route) => route.hasLoader)
+        .map((route) => route.id)
+    )
+
+    const routes = __remixRouter.createRoutesForHMR(
+      needsRevalidation,
+      manifest.routes,
+      window.__remixRouteModules,
+      window.__remixContext.future
+    )
+    __remixRouter._internalSetRoutes(routes)
+    routeUpdates.clear()
+  }
+
   await revalidate()
+  if (manifest) {
+    Object.assign(window.__remixManifest, manifest)
+  }
   exports.performReactRefresh()
 }, 16)
 
@@ -71,6 +113,8 @@ function __hmr_import(module) {
   return import(/* @vite-ignore */ module)
 }
 
+const routeUpdates = new Map()
+
 async function revalidate() {
   let { promise, resolve } = channel()
   let unsub = __remixRouter.subscribe((state) => {
@@ -99,7 +143,12 @@ function channel() {
   return { promise, resolve, reject }
 }
 
+import.meta.hot.on('revive:hmr-route', async ({ route }) => {
+  routeUpdates.set(route.id, route)
+})
+
 exports.__hmr_import = __hmr_import
 exports.registerExportsForReactRefresh = registerExportsForReactRefresh
 exports.validateRefreshBoundaryAndEnqueueUpdate =
   validateRefreshBoundaryAndEnqueueUpdate
+exports.enqueueUpdate = enqueueUpdate
