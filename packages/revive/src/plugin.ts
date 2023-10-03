@@ -753,8 +753,7 @@ export let revive: (options?: RevivePluginOptions) => Plugin[] = (
     },
     {
       name: 'revive-react-refresh-babel',
-      // TODO: should `enforce` be `post` so that things like MDX get react-refresh/babel applied?
-      enforce: 'pre',
+      enforce: 'post',
       async transform(code, id, options) {
         if (viteCommand !== 'serve') return
         if (id.includes('/node_modules/')) return
