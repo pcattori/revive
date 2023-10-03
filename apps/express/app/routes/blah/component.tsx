@@ -1,3 +1,1 @@
-export const Component = ({ val }: { val: number }) => (
-  <pre>value is: {val}</pre>
-)
+export const Component = ({ val }: { val: number }) => <pre>value: {val}</pre>
