@@ -658,17 +658,24 @@ export let revive: (options?: RevivePluginOptions) => Plugin[] = (
         let route = getRoute(reviveConfig, id)
         if (!route) return
 
+        const serverExports = ['loader', 'action', 'headers']
+
         const routeExports = await getRouteModuleExports(
           viteChildCompiler,
           reviveConfig,
           route.file
         )
 
-        // ignore routes without component
-        if (!routeExports.includes('default')) return
+        // ignore resource routes that only have server exports
+        // note: resource routes for fullstack components don't need a `default` export
+        // but still need their server exports removed
+        let browserExports = routeExports.filter(
+          (x) => !serverExports.includes(x)
+        )
+        if (browserExports.length === 0) return
 
         return {
-          code: removeExports(code, ['loader', 'action', 'headers']),
+          code: removeExports(code, serverExports),
           map: null,
         }
       },
@@ -820,11 +827,14 @@ function addRefreshWrapper(
   id: string
 ): string {
   let isRoute = getRoute(reviveConfig, id)
-  let footer = isRoute ? REACT_REFRESH_ROUTE_FOOTER : REACT_REFRESH_FOOTER
+  let acceptExports = isRoute ? ['meta', 'links'] : []
   return (
     REACT_REFRESH_HEADER.replace('__SOURCE__', JSON.stringify(id)) +
     code +
-    footer.replace('__SOURCE__', JSON.stringify(id))
+    REACT_REFRESH_FOOTER.replace('__SOURCE__', JSON.stringify(id)).replace(
+      '__ACCEPT_EXPORTS__',
+      JSON.stringify(acceptExports)
+    )
   )
 }
 
@@ -859,22 +869,8 @@ if (import.meta.hot && !inWebWorker) {
     RefreshRuntime.registerExportsForReactRefresh(__SOURCE__, currentExports);
     import.meta.hot.accept((nextExports) => {
       if (!nextExports) return;
-      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate(currentExports, nextExports);
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate(currentExports, nextExports, __ACCEPT_EXPORTS__);
       if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
-    });
-  });
-}`
-
-const REACT_REFRESH_ROUTE_FOOTER = `
-if (import.meta.hot && !inWebWorker) {
-  window.$RefreshReg$ = prevRefreshReg;
-  window.$RefreshSig$ = prevRefreshSig;
-  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
-    RefreshRuntime.registerExportsForReactRefresh(__SOURCE__, currentExports);
-    import.meta.hot.acceptExports(["default", "links", "meta"], (nextExports) => {
-      if (!nextExports) return;
-      // TODO: dynamically accept user-defined component exports (e.g. "fullstack components")
-      RefreshRuntime.enqueueUpdate();
     });
   });
 }`

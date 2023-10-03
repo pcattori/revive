@@ -73,24 +73,43 @@ function registerExportsForReactRefresh(filename, moduleExports) {
   }
 }
 
-function validateRefreshBoundaryAndEnqueueUpdate(prevExports, nextExports) {
-  if (!predicateOnExport(prevExports, (key) => key in nextExports)) {
+function validateRefreshBoundaryAndEnqueueUpdate(
+  prevExports,
+  nextExports,
+  // non-component exports that are handled by the framework (e.g. `meta` and `links` for route modules)
+  acceptExports = []
+) {
+  if (
+    !predicateOnExport(
+      prevExports,
+      (key) => key in nextExports || acceptExports.includes(key)
+    )
+  ) {
     return 'Could not Fast Refresh (export removed)'
   }
-  if (!predicateOnExport(nextExports, (key) => key in prevExports)) {
+  if (
+    !predicateOnExport(
+      nextExports,
+      (key) => key in prevExports || acceptExports.includes(key)
+    )
+  ) {
     return 'Could not Fast Refresh (new export)'
   }
 
   let hasExports = false
-  const allExportsAreComponentsOrUnchanged = predicateOnExport(
+  const allExportsAreHandledOrUnchanged = predicateOnExport(
     nextExports,
     (key, value) => {
       hasExports = true
+      // Remix can handle Remix-specific exports (e.g. `meta` and `links`)
+      if (acceptExports.includes(key)) return true
+      // React Fast Refresh can handle component exports
       if (exports.isLikelyComponentType(value)) return true
+      // Unchanged exports are implicitly handled
       return prevExports[key] === nextExports[key]
     }
   )
-  if (hasExports && allExportsAreComponentsOrUnchanged) {
+  if (hasExports && allExportsAreHandledOrUnchanged) {
     enqueueUpdate()
   } else {
     return 'Could not Fast Refresh. Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports'
