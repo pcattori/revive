@@ -17,7 +17,7 @@ export default function Blah() {
   const { message, val1, val2 } = useLoaderData<typeof loader>()
   return (
     <div>
-      <h1 className="blah_heading">is that so{message}</h1>
+      <h1 className="blah_heading">{message}</h1>
       {/* <h2>{val1}</h2> */}
       <h2>{val2}</h2>
       <Component val={val1} />
