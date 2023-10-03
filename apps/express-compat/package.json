@@ -36,7 +36,8 @@
     "remark-mdx-filename": "workspace:*",
     "remark-remix-mdx-frontmatter": "workspace:*",
     "revive": "workspace:*",
-    "vite": "^4.4.9"
+    "vite": "^4.4.9",
+    "vite-tsconfig-paths": "^4.2.1"
   },
   "nx": {
     "targets": {

@@ -12,8 +12,8 @@ import {
 } from '@remix-run/react'
 import { cssBundleHref } from '@remix-run/css-bundle'
 
-import { db } from './db.server'
-import globalStyles from './global.css'
+import { db } from '~/db.server'
+import globalStyles from '~/global.css'
 
 export const links: LinksFunction = () => {
   return [

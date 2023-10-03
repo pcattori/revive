@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import tsconfigPaths from 'vite-tsconfig-paths'
 import mdx from '@mdx-js/rollup'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkMdxFilename from 'remark-mdx-filename'
@@ -11,6 +12,7 @@ export default defineConfig({
   plugins: [
     revive(remixConfig),
     legacyRemixCssImportSemantics(),
+    tsconfigPaths(),
     mdx({
       remarkPlugins: [
         remarkFrontmatter,
