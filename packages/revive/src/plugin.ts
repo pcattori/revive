@@ -655,12 +655,7 @@ export let revive: (options?: RevivePluginOptions) => Plugin[] = (
 
         const reviveConfig = await resolveReviveConfig()
 
-        // get route from vite module id (TODO: make this more efficient)
-        if (!id.startsWith(reviveConfig.appDirectory)) return
-        const routePath = path.relative(reviveConfig.appDirectory, id)
-        const route = Object.values(reviveConfig.routes).find(
-          (r) => r.file === routePath
-        )
+        let route = getRoute(reviveConfig, id)
         if (!route) return
 
         const routeExports = await getRouteModuleExports(
