@@ -14,7 +14,8 @@
     "build:app": "nx run express-app:build",
     "build:compat": "nx run express-compat-app:build",
     "build:compat:remix": "nx run express-compat-app:build:remix",
-    "serve": "nx run express-app:serve",
+    "serve": "pnpm serve:app",
+    "serve:app": "nx run express-app:serve",
     "serve:compat": "nx run express-compat-app:serve",
     "preinstall": "npx only-allow pnpm"
   },
