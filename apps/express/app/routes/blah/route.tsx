@@ -6,6 +6,7 @@ import styles from './styles.module.css'
 import doggo from './doggo.jpg'
 import { value1, value2 } from './loader-util-1'
 import { Component } from './component'
+import { Fullstack } from '../fullstack'
 
 export const loader = () => {
   return json({ message: 'hello from loader!', val1: value1, val2: value2 })
@@ -17,8 +18,8 @@ export default function Blah() {
   const { message, val1, val2 } = useLoaderData<typeof loader>()
   return (
     <div>
-      <h1 className="blah_heading">{message}</h1>
-      {/* <h2>{val1}</h2> */}
+      <h1 className="blah_heading">michael {message}</h1>
+      <Fullstack />
       <h2>{val2}</h2>
       <Component val={val1} />
       <img

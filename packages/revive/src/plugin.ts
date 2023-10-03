@@ -55,6 +55,7 @@ export type RevivePluginOptions = Pick<
 type ResolvedReviveConfig = Pick<
   ResolvedRemixConfig,
   | 'appDirectory'
+  | 'rootDirectory'
   | 'assetsBuildDirectory'
   | 'entryClientFile'
   | 'entryServerFile'
@@ -298,6 +299,7 @@ export let revive: (options?: RevivePluginOptions) => Plugin[] = (
 
     return {
       appDirectory,
+      rootDirectory,
       assetsBuildDirectory,
       entryClientFile,
       publicPath,
@@ -827,7 +829,7 @@ function addRefreshWrapper(
   id: string
 ): string {
   let isRoute = getRoute(reviveConfig, id)
-  let acceptExports = isRoute ? ['meta', 'links'] : []
+  let acceptExports = isRoute ? ['meta', 'links', 'shouldRevalidate'] : []
   return (
     REACT_REFRESH_HEADER.replace('__SOURCE__', JSON.stringify(id)) +
     code +
@@ -918,6 +920,12 @@ async function getRouteMetadata(
     path: route.path,
     index: route.index,
     caseSensitive: route.caseSensitive,
+    url:
+      '/' +
+      path.relative(
+        reviveConfig.rootDirectory,
+        resolveRelativeRouteFilePath(route, reviveConfig)
+      ),
     module: `${resolveFsUrl(
       resolveRelativeRouteFilePath(route, reviveConfig)
     )}?import`, // Ensure the Vite dev server responds with a JS module
