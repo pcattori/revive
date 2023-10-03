@@ -9,6 +9,7 @@ import { revive, legacyRemixCssImportSemantics } from 'revive'
 import remixConfig from './remix.config.mjs'
 
 export default defineConfig({
+  server: { port: 3000 },
   plugins: [
     revive(remixConfig),
     legacyRemixCssImportSemantics(),
