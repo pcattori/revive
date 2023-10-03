@@ -1,5 +1,5 @@
 diff --git a/dist/server.js b/dist/server.js
-index 5287fcba3e5f6c0252f81e6fc03e08f72e58ab80..a246d9ebe01b94ac95ec14fa3703d107caf01514 100644
+index b623a61ca257787949e727c6d0ae2ad41a177eba..9f554ecc6e27679ed37725f6a1060664bad08b3e 100644
 --- a/dist/server.js
 +++ b/dist/server.js
 @@ -37,7 +37,7 @@ const createRequestHandler = (build, mode$1) => {
@@ -7,7 +7,7 @@ index 5287fcba3e5f6c0252f81e6fc03e08f72e58ab80..a246d9ebe01b94ac95ec14fa3703d107
      }
    });
 -  return async function requestHandler(request, loadContext = {}) {
-+  return async function requestHandler(request, loadContext = {}, criticalStyles) {
++  return async function requestHandler(request, loadContext = {}, { criticalCss } = {}) {
      let url = new URL(request.url);
      let matches = routeMatching.matchServerRoutes(routes$1, url.pathname);
      let handleError = error => errorHandler(error, {
@@ -16,7 +16,7 @@ index 5287fcba3e5f6c0252f81e6fc03e08f72e58ab80..a246d9ebe01b94ac95ec14fa3703d107
        response = await handleResourceRequestRR(serverMode, staticHandler, matches.slice(-1)[0].route.id, request, loadContext, handleError);
      } else {
 -      response = await handleDocumentRequestRR(serverMode, build, staticHandler, request, loadContext, handleError);
-+      response = await handleDocumentRequestRR(serverMode, build, staticHandler, request, loadContext, handleError, criticalStyles);
++      response = await handleDocumentRequestRR(serverMode, build, staticHandler, request, loadContext, handleError, criticalCss);
      }
      if (request.method === "HEAD") {
        return new Response(null, {
@@ -25,7 +25,7 @@ index 5287fcba3e5f6c0252f81e6fc03e08f72e58ab80..a246d9ebe01b94ac95ec14fa3703d107
    }
  }
 -async function handleDocumentRequestRR(serverMode, build, staticHandler, request, loadContext, handleError) {
-+async function handleDocumentRequestRR(serverMode, build, staticHandler, request, loadContext, handleError, criticalStyles) {
++async function handleDocumentRequestRR(serverMode, build, staticHandler, request, loadContext, handleError, criticalCss) {
    let context;
    try {
      context = await staticHandler.query(request, {
@@ -33,7 +33,7 @@ index 5287fcba3e5f6c0252f81e6fc03e08f72e58ab80..a246d9ebe01b94ac95ec14fa3703d107
      manifest: build.assets,
      routeModules: entry.createEntryRouteModules(build.routes),
      staticHandlerContext: context,
-+    criticalStyles,
++    criticalCss,
      serverHandoffString: serverHandoff.createServerHandoffString({
        url: context.location.pathname,
        state: {
@@ -43,7 +43,7 @@ index 5287fcba3e5f6c0252f81e6fc03e08f72e58ab80..a246d9ebe01b94ac95ec14fa3703d107
        },
 -      future: build.future
 +      future: build.future,
-+      criticalStyles
++      criticalCss
      }),
      future: build.future,
      serializeError: err => errors.serializeError(err, serverMode)

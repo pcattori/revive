@@ -1,5 +1,5 @@
 diff --git a/dist/browser.js b/dist/browser.js
-index 6f5e907e9377fc24ed2e01e37e68e1a87b1622c4..64e0e9529119946ead66b65c597d1c36db151be8 100644
+index 764ecf32575111b18e6e6cc03a64759bb6856b74..19b6150ecd6c94099d615d4e5c1f4b12e9c78479 100644
 --- a/dist/browser.js
 +++ b/dist/browser.js
 @@ -125,7 +125,8 @@ function RemixBrowser(_props) {
@@ -8,12 +8,12 @@ index 6f5e907e9377fc24ed2e01e37e68e1a87b1622c4..64e0e9529119946ead66b65c597d1c36
        routeModules: window.__remixRouteModules,
 -      future: window.__remixContext.future
 +      future: window.__remixContext.future,
-+      criticalStyles: window.__remixContext.criticalStyles
++      criticalCss: window.__remixContext.criticalCss
      }
    }, /*#__PURE__*/React__namespace.createElement(errorBoundaries.RemixErrorBoundary, {
      location: location
 diff --git a/dist/components.js b/dist/components.js
-index ef21b84685f3d32ea76a35f18da5fdad030b9e20..5024f140fef493e56d0fa1f5dcca9c1a5bd31d2e 100644
+index 134d3f384e12632d703732226af5843f041fa602..3157d61856d0bfd96c5870178f62b99afd3fe73d 100644
 --- a/dist/components.js
 +++ b/dist/components.js
 @@ -193,7 +193,8 @@ function composeEventHandlers(theirHandler, ourHandler) {
@@ -22,7 +22,7 @@ index ef21b84685f3d32ea76a35f18da5fdad030b9e20..5024f140fef493e56d0fa1f5dcca9c1a
      manifest,
 -    routeModules
 +    routeModules,
-+    criticalStyles
++    criticalCss
    } = useRemixContext();
    let {
      errors,
@@ -32,7 +32,7 @@ index ef21b84685f3d32ea76a35f18da5fdad030b9e20..5024f140fef493e56d0fa1f5dcca9c1a
    let keyedLinks = React__namespace.useMemo(() => links.getKeyedLinksForMatches(matches, routeModules, manifest), [matches, routeModules, manifest]);
 -  return /*#__PURE__*/React__namespace.createElement(React__namespace.Fragment, null, keyedLinks.map(({
 +  return /*#__PURE__*/React__namespace.createElement(React__namespace.Fragment, null, [
-+    criticalStyles ? /*#__PURE__*/React__namespace.createElement('style', { key: 'style' }, criticalStyles) : null,
++    criticalCss ? /*#__PURE__*/React__namespace.createElement('style', { key: 'style' }, criticalCss) : null,
 +    keyedLinks.map(({
      key,
      link
@@ -46,7 +46,7 @@ index ef21b84685f3d32ea76a35f18da5fdad030b9e20..5024f140fef493e56d0fa1f5dcca9c1a
  
  /**
 diff --git a/dist/esm/browser.js b/dist/esm/browser.js
-index 243b58370be8a61dbc42477e5b7f75e0e695faba..f18abcf2062e43daca29b5f9b21fad91cd690eb9 100644
+index 5acc26e7affafb0756f91dc4e78ee3d33f44abd1..68970c5728aaeeedf9b370e0552d0f7856bb0abb 100644
 --- a/dist/esm/browser.js
 +++ b/dist/esm/browser.js
 @@ -161,7 +161,8 @@ function RemixBrowser(_props) {
@@ -55,12 +55,12 @@ index 243b58370be8a61dbc42477e5b7f75e0e695faba..f18abcf2062e43daca29b5f9b21fad91
        routeModules: window.__remixRouteModules,
 -      future: window.__remixContext.future
 +      future: window.__remixContext.future,
-+      criticalStyles: window.__remixContext.criticalStyles
++      criticalCss: window.__remixContext.criticalCss
      }
    }, /*#__PURE__*/React.createElement(RemixErrorBoundary, {
      location: location
 diff --git a/dist/esm/components.js b/dist/esm/components.js
-index 18f36021d36fafc47c85a5803c9e2779e10b22f7..17b055cf7a6d6fd72bad049d3052117add2ff525 100644
+index 89d80308b3a54934e4fd3d0039f60562bf49dcc9..aff3c46b6566cef6d5f56c7d4973ef15f26b793e 100644
 --- a/dist/esm/components.js
 +++ b/dist/esm/components.js
 @@ -169,7 +169,8 @@ function composeEventHandlers(theirHandler, ourHandler) {
@@ -69,7 +69,7 @@ index 18f36021d36fafc47c85a5803c9e2779e10b22f7..17b055cf7a6d6fd72bad049d3052117a
      manifest,
 -    routeModules
 +    routeModules,
-+    criticalStyles
++    criticalCss
    } = useRemixContext();
    let {
      errors,
@@ -79,7 +79,7 @@ index 18f36021d36fafc47c85a5803c9e2779e10b22f7..17b055cf7a6d6fd72bad049d3052117a
    let keyedLinks = React.useMemo(() => getKeyedLinksForMatches(matches, routeModules, manifest), [matches, routeModules, manifest]);
 -  return /*#__PURE__*/React.createElement(React.Fragment, null, keyedLinks.map(({
 +  return /*#__PURE__*/React.createElement(React.Fragment, null, [
-+    criticalStyles ? /*#__PURE__*/React.createElement('style', { key: 'style' }, criticalStyles) : null,
++    criticalCss ? /*#__PURE__*/React.createElement('style', { key: 'style' }, criticalCss) : null,
 +    keyedLinks.map(({
      key,
      link
@@ -93,7 +93,7 @@ index 18f36021d36fafc47c85a5803c9e2779e10b22f7..17b055cf7a6d6fd72bad049d3052117a
  
  /**
 diff --git a/dist/esm/links.js b/dist/esm/links.js
-index 3aa7b5f618a3ef497a2db73d49aeb7492dab41c9..867012f5c705da0fbbade9ea5ba1b6977fd05603 100644
+index cfcf6ada9e5754d086049a6705647e789bfb24bd..c2adc82ad2122611fc75d4271522abfa64ad9c85 100644
 --- a/dist/esm/links.js
 +++ b/dist/esm/links.js
 @@ -26,15 +26,21 @@ function getKeyedLinksForMatches(matches, routeModules, manifest) {
@@ -125,7 +125,7 @@ index 3aa7b5f618a3ef497a2db73d49aeb7492dab41c9..867012f5c705da0fbbade9ea5ba1b697
    for (let descriptor of descriptors) {
      if (!isPageLinkDescriptor(descriptor) && descriptor.rel === "stylesheet") {
 diff --git a/dist/esm/routes.js b/dist/esm/routes.js
-index c33ccae38caa36dc0ca6649592ce8d52652a0677..fff5720877932dd548cfa7ca01fc6ac1663526c4 100644
+index fc88668b9226bfaf278729bab738540d8cd378dd..fd220d3323828f7685efe0bf8c02c86534002ba5 100644
 --- a/dist/esm/routes.js
 +++ b/dist/esm/routes.js
 @@ -121,7 +121,7 @@ function wrapShouldRevalidateForHdr(routeId, routeShouldRevalidate, needsRevalid
@@ -138,7 +138,7 @@ index c33ccae38caa36dc0ca6649592ce8d52652a0677..fff5720877932dd548cfa7ca01fc6ac1
      ...routeModule,
      default: undefined,
 diff --git a/dist/links.js b/dist/links.js
-index 9565d778da216958e4674ec8258634fcc937a8db..f61d87da47320f19a1164f1ff29f5fb0b929b28b 100644
+index 4bb74f3b54f9fe77b59bd897c35423ade8445936..81791990f520dbcee62c75139728c340f04099d9 100644
 --- a/dist/links.js
 +++ b/dist/links.js
 @@ -30,15 +30,21 @@ function getKeyedLinksForMatches(matches, routeModules, manifest) {
@@ -170,7 +170,7 @@ index 9565d778da216958e4674ec8258634fcc937a8db..f61d87da47320f19a1164f1ff29f5fb0
    for (let descriptor of descriptors) {
      if (!isPageLinkDescriptor(descriptor) && descriptor.rel === "stylesheet") {
 diff --git a/dist/routes.js b/dist/routes.js
-index 48b804e88d786427b0e1bd98e2cce602d0bdfb85..b2ac00292168775e9d3f5c695544d5a9747bd150 100644
+index 1e9d735aae4f7429db20bc177658d2dd701b36f8..8ecbccc3cd8e2eb523fc80099ee10b2d9b7f2519 100644
 --- a/dist/routes.js
 +++ b/dist/routes.js
 @@ -142,7 +142,7 @@ function wrapShouldRevalidateForHdr(routeId, routeShouldRevalidate, needsRevalid
@@ -183,14 +183,14 @@ index 48b804e88d786427b0e1bd98e2cce602d0bdfb85..b2ac00292168775e9d3f5c695544d5a9
      ...routeModule,
      default: undefined,
 diff --git a/dist/server.js b/dist/server.js
-index 57d3da0b0125f7316ea58e0d6a63e3acc134114d..70da457f5de0b8eb0583ac595ff4024ba38c25f9 100644
+index 18997c6a5e50b7e197698dca48961fb3c6e3b54e..88378440903c93545da15a4685ae8ba1981115f4 100644
 --- a/dist/server.js
 +++ b/dist/server.js
 @@ -54,6 +54,7 @@ function RemixServer({
    let {
      manifest,
      routeModules,
-+    criticalStyles,
++    criticalCss,
      serverHandoffString
    } = context;
    let routes$1 = routes.createServerRoutes(manifest.routes, routeModules, context.future);
@@ -198,7 +198,7 @@ index 57d3da0b0125f7316ea58e0d6a63e3acc134114d..70da457f5de0b8eb0583ac595ff4024b
      value: {
        manifest,
        routeModules,
-+      criticalStyles,
++      criticalCss,
        serverHandoffString,
        future: context.future,
        serializeError: context.serializeError,
