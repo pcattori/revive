@@ -1,4 +1,4 @@
-import { spawn } from 'child_process'
+#!/usr/bin/env node
 
 import { Command } from 'commander'
 
