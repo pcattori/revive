@@ -18,7 +18,7 @@ const enqueueUpdate = debounce(async () => {
     routeUpdates.forEach(async (route) => {
       manifest[route.id] = route
 
-      let imported = await __hmr_import(route.module)
+      let imported = await __hmr_import(route.module + '?t=' + Date.now())
       let routeModule = {
         ...imported,
         // react-refresh takes care of updating these in-place,
