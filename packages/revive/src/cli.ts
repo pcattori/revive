@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-import { spawn } from 'node:child_process'
 import { Command } from 'commander'
 
 import { build } from './build.js'
+import { dev } from './dev.js'
 
 let program = new Command()
 program.name('revive')
@@ -32,27 +32,8 @@ program
     'Force the optimizer to ignore the cache and re-bundle',
     false
   )
-  .action(async ({ config, port, strictPort, host, force }) => {
-    spawn(
-      'vite',
-      [
-        'dev',
-        ...(config ? ['--config', config] : []),
-        ...(port ? ['--port', port] : []),
-        ...(strictPort ? ['--strictPort'] : []),
-        ...(force ? ['--force'] : []),
-        ...(host
-          ? ['--host', ...(typeof host === 'string' ? [host] : [])]
-          : []),
-      ],
-      {
-        shell: true,
-        stdio: 'inherit',
-        env: {
-          ...process.env,
-        },
-      }
-    )
+  .action(({ config, port, strictPort, host, force }) => {
+    dev({ config, port, strictPort, host, force })
   })
 
 program.parse()
